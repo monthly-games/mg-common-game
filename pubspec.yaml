@@ -1,6 +1,6 @@
 name: mg_common_game
-description: Monthly Games 공통 게임 엔진 모듈
-version: 0.1.0
+description: Monthly Games 공통 게임 엔진 모듈 - 통합 UI 컴포넌트, 게임 시스템, 수익화 모듈
+version: 1.0.0
 publish_to: none
 
 environment:
