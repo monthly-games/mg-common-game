@@ -1,0 +1,97 @@
+/// MG-Games UI 시스템
+/// 모든 UI 모듈 통합 export
+library mg_ui;
+
+// ============================================================
+// 테마 시스템
+// ============================================================
+export 'theme/mg_colors.dart';
+export 'theme/mg_theme.dart';
+export 'theme/dark_mode_colors.dart';
+
+// ============================================================
+// 타이포그래피
+// ============================================================
+export 'typography/mg_text_styles.dart' hide TextScaleOption;
+
+// ============================================================
+// 아이콘
+// ============================================================
+export 'icons/mg_icons.dart';
+
+// ============================================================
+// 레이아웃
+// ============================================================
+export 'layout/mg_spacing.dart';
+export 'layout/mg_safe_area.dart';
+export 'layout/mg_game_canvas.dart';
+export 'layout/foldable_support.dart';
+export 'layout/screen_size.dart';
+export 'layout/adaptive_layout.dart';
+
+// ============================================================
+// 화면 방향
+// ============================================================
+export 'orientation/screen_orientation.dart';
+
+// ============================================================
+// 접근성
+// ============================================================
+export 'accessibility/accessibility_settings.dart';
+export 'accessibility/colorblind_colors.dart';
+export 'accessibility/high_contrast_colors.dart';
+export 'accessibility/screen_reader_support.dart';
+export 'accessibility/touch_settings.dart';
+export 'accessibility/timing_settings.dart';
+export 'accessibility/haptic_feedback_manager.dart';
+
+// ============================================================
+// 애니메이션
+// ============================================================
+export 'animations/animation_durations.dart';
+export 'animations/mg_animation.dart';
+
+// ============================================================
+// 위젯 - 버튼
+// ============================================================
+export 'widgets/buttons/mg_button.dart';
+
+// ============================================================
+// 위젯 - 컨테이너
+// ============================================================
+export 'widgets/containers/mg_card.dart';
+
+// ============================================================
+// 위젯 - 다이얼로그
+// ============================================================
+export 'widgets/dialogs/mg_modal.dart';
+
+// ============================================================
+// 위젯 - 프로그레스
+// ============================================================
+export 'widgets/progress/mg_progress.dart';
+
+// ============================================================
+// 위젯 - 로딩
+// ============================================================
+export 'widgets/loading/mg_loading.dart';
+
+// ============================================================
+// 위젯 - 오류
+// ============================================================
+export 'widgets/error/mg_error.dart';
+
+// ============================================================
+// 위젯 - 인디케이터
+// ============================================================
+export 'widgets/indicators/mg_offline_indicator.dart';
+
+// ============================================================
+// 위젯 - 자막
+// ============================================================
+export 'widgets/subtitles/mg_subtitles.dart';
+
+// ============================================================
+// 화면
+// ============================================================
+export 'screens/accessibility_settings_screen.dart';
