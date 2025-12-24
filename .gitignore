@@ -1,0 +1,29 @@
+# Flutter/Dart
+.dart_tool/
+.packages
+build/
+*.iml
+
+# IDE
+.idea/
+*.swp
+.vscode/
+
+# macOS
+.DS_Store
+
+# Firebase
+firebase-debug.log
+.firebase/
+
+# Node
+node_modules/
+
+# Generated files
+*.freezed.dart
+*.g.dart
+
+# Pub
+pubspec.lock
+.flutter-plugins
+.flutter-plugins-dependencies
