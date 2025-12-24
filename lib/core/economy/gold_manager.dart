@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:injectable/injectable.dart';
 import 'package:mg_common_game/systems/progression/prestige_manager.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../systems/save_manager.dart';
 
 @singleton

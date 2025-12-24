@@ -7,12 +7,17 @@
       "name": "mg_common_game",
       "version": "1.0.0",
       "dependencies": [
+        "firebase_analytics",
+        "firebase_core",
+        "firebase_crashlytics",
+        "firebase_remote_config",
         "flame",
         "flame_audio",
         "flame_spine",
         "flutter",
         "freezed_annotation",
         "get_it",
+        "google_mobile_ads",
         "injectable",
         "intl",
         "json_annotation",
@@ -226,6 +231,49 @@
       "dependencies": [
         "async",
         "collection",
+        "meta"
+      ]
+    },
+    {
+      "name": "firebase_remote_config",
+      "version": "4.4.7",
+      "dependencies": [
+        "firebase_core",
+        "firebase_core_platform_interface",
+        "firebase_remote_config_platform_interface",
+        "firebase_remote_config_web",
+        "flutter"
+      ]
+    },
+    {
+      "name": "firebase_crashlytics",
+      "version": "3.5.7",
+      "dependencies": [
+        "firebase_core",
+        "firebase_core_platform_interface",
+        "firebase_crashlytics_platform_interface",
+        "flutter",
+        "stack_trace"
+      ]
+    },
+    {
+      "name": "firebase_analytics",
+      "version": "10.10.7",
+      "dependencies": [
+        "firebase_analytics_platform_interface",
+        "firebase_analytics_web",
+        "firebase_core",
+        "firebase_core_platform_interface",
+        "flutter"
+      ]
+    },
+    {
+      "name": "firebase_core",
+      "version": "2.32.0",
+      "dependencies": [
+        "firebase_core_platform_interface",
+        "firebase_core_web",
+        "flutter",
         "meta"
       ]
     },
@@ -736,6 +784,17 @@
       ]
     },
     {
+      "name": "firebase_analytics_platform_interface",
+      "version": "3.10.8",
+      "dependencies": [
+        "_flutterfire_internals",
+        "firebase_core",
+        "flutter",
+        "meta",
+        "plugin_platform_interface"
+      ]
+    },
+    {
       "name": "ordered_set",
       "version": "8.0.0",
       "dependencies": []
@@ -1163,6 +1222,134 @@
       "dependencies": [
         "meta",
         "path"
+      ]
+    },
+    {
+      "name": "google_mobile_ads",
+      "version": "5.3.1",
+      "dependencies": [
+        "flutter",
+        "meta",
+        "webview_flutter",
+        "webview_flutter_android",
+        "webview_flutter_wkwebview"
+      ]
+    },
+    {
+      "name": "webview_flutter",
+      "version": "4.13.0",
+      "dependencies": [
+        "flutter",
+        "webview_flutter_android",
+        "webview_flutter_platform_interface",
+        "webview_flutter_wkwebview"
+      ]
+    },
+    {
+      "name": "webview_flutter_platform_interface",
+      "version": "2.14.0",
+      "dependencies": [
+        "flutter",
+        "meta",
+        "plugin_platform_interface"
+      ]
+    },
+    {
+      "name": "webview_flutter_wkwebview",
+      "version": "3.23.5",
+      "dependencies": [
+        "flutter",
+        "meta",
+        "path",
+        "webview_flutter_platform_interface"
+      ]
+    },
+    {
+      "name": "firebase_core_platform_interface",
+      "version": "5.4.2",
+      "dependencies": [
+        "collection",
+        "flutter",
+        "flutter_test",
+        "meta",
+        "plugin_platform_interface"
+      ]
+    },
+    {
+      "name": "firebase_core_web",
+      "version": "2.24.0",
+      "dependencies": [
+        "firebase_core_platform_interface",
+        "flutter",
+        "flutter_web_plugins",
+        "meta",
+        "web"
+      ]
+    },
+    {
+      "name": "webview_flutter_android",
+      "version": "4.10.11",
+      "dependencies": [
+        "flutter",
+        "meta",
+        "webview_flutter_platform_interface"
+      ]
+    },
+    {
+      "name": "firebase_remote_config_platform_interface",
+      "version": "1.4.35",
+      "dependencies": [
+        "_flutterfire_internals",
+        "firebase_core",
+        "flutter",
+        "meta",
+        "plugin_platform_interface"
+      ]
+    },
+    {
+      "name": "firebase_analytics_web",
+      "version": "0.5.7+7",
+      "dependencies": [
+        "_flutterfire_internals",
+        "firebase_analytics_platform_interface",
+        "firebase_core",
+        "firebase_core_web",
+        "flutter",
+        "flutter_web_plugins"
+      ]
+    },
+    {
+      "name": "firebase_crashlytics_platform_interface",
+      "version": "3.6.35",
+      "dependencies": [
+        "_flutterfire_internals",
+        "collection",
+        "firebase_core",
+        "flutter",
+        "meta",
+        "plugin_platform_interface"
+      ]
+    },
+    {
+      "name": "firebase_remote_config_web",
+      "version": "1.6.7",
+      "dependencies": [
+        "firebase_core",
+        "firebase_core_web",
+        "firebase_remote_config_platform_interface",
+        "flutter",
+        "flutter_web_plugins"
+      ]
+    },
+    {
+      "name": "_flutterfire_internals",
+      "version": "1.3.35",
+      "dependencies": [
+        "collection",
+        "firebase_core",
+        "firebase_core_platform_interface",
+        "flutter",
+        "meta"
       ]
     }
   ],

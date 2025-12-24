@@ -213,7 +213,7 @@ class _SettingTile extends StatelessWidget {
         ),
         value: value,
         onChanged: onChanged,
-        activeColor: color,
+        activeThumbColor: color,
       ),
     );
   }

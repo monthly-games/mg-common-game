@@ -1,6 +1,5 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'animation_durations.dart';
 import '../accessibility/accessibility_settings.dart';
 
 /// MG-Games 애니메이션 위젯

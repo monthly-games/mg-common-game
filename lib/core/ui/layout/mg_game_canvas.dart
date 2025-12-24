@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'mg_safe_area.dart';
 import 'mg_spacing.dart';
 
 /// MG-Games 게임 캔버스 위젯
