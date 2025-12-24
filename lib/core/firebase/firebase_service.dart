@@ -292,7 +292,7 @@ class FirebaseService {
 
   /// Log unlock achievement
   Future<void> logUnlockAchievement({required String achievementId}) async {
-    await _analytics?.logUnlockAchievement(achievementId: achievementId);
+    await _analytics?.logUnlockAchievement(id: achievementId);
   }
 
   /// Log post score

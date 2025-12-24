@@ -171,6 +171,7 @@ class Purchase {
     int? verificationTimestamp,
     Map<String, dynamic>? verificationResponse,
     String? errorMessage,
+    String? receiptData,
   }) {
     return Purchase(
       purchaseId: purchaseId,
@@ -185,7 +186,7 @@ class Purchase {
       priceUsd: priceUsd,
       verificationTimestamp: verificationTimestamp ?? this.verificationTimestamp,
       originalTransactionId: originalTransactionId,
-      receiptData: receiptData,
+      receiptData: receiptData ?? this.receiptData,
       verificationResponse: verificationResponse ?? this.verificationResponse,
       errorMessage: errorMessage ?? this.errorMessage,
       attributes: attributes,

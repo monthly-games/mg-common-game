@@ -42,6 +42,12 @@ class AchievementManager extends ChangeNotifier implements Saveable {
   List<Achievement> get unlockedAchievements =>
       _achievements.values.where((a) => a.unlocked).toList();
 
+  /// Total number of achievements
+  int get totalCount => _achievements.length;
+
+  /// Number of unlocked achievements
+  int get unlockedCount => _achievements.values.where((a) => a.unlocked).length;
+
   void registerAchievement(Achievement achievement) {
     _achievements[achievement.id] = achievement;
   }

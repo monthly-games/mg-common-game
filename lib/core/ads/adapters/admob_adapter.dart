@@ -419,8 +419,9 @@ class AdMobAdapter {
 
   /// Get adaptive banner size
   static Future<AdSize> getAdaptiveBannerSize(double width) async {
-    return AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(
+    final adaptiveSize = await AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(
       width.truncate(),
-    ) ?? AdSize.banner;
+    );
+    return adaptiveSize ?? AdSize.banner;
   }
 }
