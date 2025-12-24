@@ -20,7 +20,7 @@ export 'systems/stats/statistics_manager.dart';
 export 'systems/settings/settings_manager.dart';
 
 // Gacha & BattlePass systems
-export 'systems/gacha/gacha_config.dart';
+export 'systems/gacha/gacha_pool.dart';
 export 'systems/gacha/gacha_manager.dart';
 export 'systems/battlepass/battlepass_config.dart';
 export 'systems/battlepass/battlepass_manager.dart';

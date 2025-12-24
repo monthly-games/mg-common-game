@@ -4,7 +4,7 @@ library;
 import 'package:flutter/material.dart';
 import '../../../../systems/battlepass/battlepass_config.dart';
 import '../../theme/mg_colors.dart';
-import '../../theme/mg_spacing.dart';
+import '../../layout/mg_spacing.dart';
 
 /// 배틀패스 티어 목록 위젯
 class BattlePassTierList extends StatelessWidget {
@@ -32,16 +32,20 @@ class BattlePassTierList extends StatelessWidget {
       itemCount: tiers.length,
       itemBuilder: (context, index) {
         final tier = tiers[index];
+        final freeReward = tier.freeRewards.isNotEmpty ? tier.freeRewards.first : null;
+        final premiumReward = tier.premiumRewards.isNotEmpty ? tier.premiumRewards.first : null;
         return _BattlePassTierCard(
           tier: tier,
           isUnlocked: currentLevel >= tier.level,
           isPremium: isPremium,
           isFreeClaimed: claimedFreeLevels.contains(tier.level),
           isPremiumClaimed: claimedPremiumLevels.contains(tier.level),
-          onClaimFree: tier.freeReward != null && currentLevel >= tier.level
+          freeReward: freeReward,
+          premiumReward: premiumReward,
+          onClaimFree: freeReward != null && currentLevel >= tier.level
               ? () => onClaimReward?.call(tier.level, false)
               : null,
-          onClaimPremium: tier.premiumReward != null &&
+          onClaimPremium: premiumReward != null &&
                           currentLevel >= tier.level &&
                           isPremium
               ? () => onClaimReward?.call(tier.level, true)
@@ -58,6 +62,8 @@ class _BattlePassTierCard extends StatelessWidget {
   final bool isPremium;
   final bool isFreeClaimed;
   final bool isPremiumClaimed;
+  final BPReward? freeReward;
+  final BPReward? premiumReward;
   final VoidCallback? onClaimFree;
   final VoidCallback? onClaimPremium;
 
@@ -67,6 +73,8 @@ class _BattlePassTierCard extends StatelessWidget {
     required this.isPremium,
     required this.isFreeClaimed,
     required this.isPremiumClaimed,
+    this.freeReward,
+    this.premiumReward,
     this.onClaimFree,
     this.onClaimPremium,
   });
@@ -85,7 +93,7 @@ class _BattlePassTierCard extends StatelessWidget {
               vertical: MGSpacing.xs,
             ),
             decoration: BoxDecoration(
-              color: isUnlocked ? MGColors.primary : Colors.grey,
+              color: isUnlocked ? MGColors.primaryAction : Colors.grey,
               borderRadius: BorderRadius.circular(4),
             ),
             child: Text(
@@ -101,7 +109,7 @@ class _BattlePassTierCard extends StatelessWidget {
           // 프리미엄 보상
           Expanded(
             child: _RewardCard(
-              reward: tier.premiumReward,
+              reward: premiumReward,
               isLocked: !isPremium,
               isUnlocked: isUnlocked && isPremium,
               isClaimed: isPremiumClaimed,
@@ -113,7 +121,7 @@ class _BattlePassTierCard extends StatelessWidget {
           // 무료 보상
           Expanded(
             child: _RewardCard(
-              reward: tier.freeReward,
+              reward: freeReward,
               isLocked: false,
               isUnlocked: isUnlocked,
               isClaimed: isFreeClaimed,
@@ -263,17 +271,19 @@ class _RewardCard extends StatelessWidget {
     switch (reward!.type) {
       case BPRewardType.currency:
         return Icons.monetization_on;
-      case BPRewardType.gem:
-        return Icons.diamond;
       case BPRewardType.item:
         return Icons.inventory_2;
       case BPRewardType.character:
         return Icons.person;
-      case BPRewardType.skin:
+      case BPRewardType.costume:
         return Icons.palette;
-      case BPRewardType.exp:
-        return Icons.trending_up;
-      case BPRewardType.ticket:
+      case BPRewardType.title:
+        return Icons.badge;
+      case BPRewardType.frame:
+        return Icons.crop_square;
+      case BPRewardType.emoji:
+        return Icons.emoji_emotions;
+      case BPRewardType.summonTicket:
         return Icons.confirmation_number;
     }
   }
@@ -311,7 +321,7 @@ class BattlePassHeader extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            MGColors.primary.withValues(alpha: 0.3),
+            MGColors.primaryAction.withValues(alpha: 0.3),
             Colors.transparent,
           ],
         ),
@@ -389,7 +399,7 @@ class BattlePassHeader extends StatelessWidget {
                 width: 60,
                 height: 60,
                 decoration: BoxDecoration(
-                  color: MGColors.primary,
+                  color: MGColors.primaryAction,
                   shape: BoxShape.circle,
                   border: Border.all(color: Colors.white, width: 2),
                 ),
@@ -603,7 +613,7 @@ class _MissionCard extends StatelessWidget {
                           value: (progress / mission.targetValue).clamp(0.0, 1.0),
                           backgroundColor: Colors.white12,
                           valueColor: AlwaysStoppedAnimation<Color>(
-                            isComplete ? MGColors.success : MGColors.primary,
+                            isComplete ? MGColors.success : MGColors.primaryAction,
                           ),
                           minHeight: 4,
                         ),

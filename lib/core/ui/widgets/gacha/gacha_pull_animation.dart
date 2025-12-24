@@ -2,9 +2,9 @@
 library;
 
 import 'package:flutter/material.dart';
-import '../../../../systems/gacha/gacha_config.dart';
+import '../../../../systems/gacha/gacha_pool.dart';
 import '../../theme/mg_colors.dart';
-import '../../theme/mg_spacing.dart';
+import '../../layout/mg_spacing.dart';
 
 /// 가챠 뽑기 연출 위젯
 class GachaPullAnimation extends StatefulWidget {
@@ -196,8 +196,8 @@ class _GachaResultCard extends StatelessWidget {
           Padding(
             padding: EdgeInsets.symmetric(horizontal: MGSpacing.xs),
             child: Text(
-              item.name,
-              style: TextStyle(
+              item.nameKr,
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
@@ -219,7 +219,7 @@ class _GachaResultCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(4),
             ),
             child: Text(
-              item.rarity.name.toUpperCase(),
+              item.rarity.nameKr,
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 10,
@@ -235,15 +235,15 @@ class _GachaResultCard extends StatelessWidget {
   Color _getRarityColor(GachaRarity rarity) {
     switch (rarity) {
       case GachaRarity.normal:
-        return MGColors.rarityNormal;
+        return MGColors.common;
       case GachaRarity.rare:
-        return MGColors.rarityRare;
+        return MGColors.rare;
       case GachaRarity.superRare:
-        return MGColors.raritySuperRare;
-      case GachaRarity.superSuperRare:
-        return MGColors.raritySuperSuperRare;
+        return MGColors.epic;
       case GachaRarity.ultraRare:
-        return MGColors.rarityUltraRare;
+        return MGColors.legendary;
+      case GachaRarity.legendary:
+        return MGColors.mythic;
     }
   }
 
@@ -255,9 +255,9 @@ class _GachaResultCard extends StatelessWidget {
         return Icons.star_border;
       case GachaRarity.superRare:
         return Icons.star;
-      case GachaRarity.superSuperRare:
-        return Icons.auto_awesome;
       case GachaRarity.ultraRare:
+        return Icons.auto_awesome;
+      case GachaRarity.legendary:
         return Icons.diamond;
     }
   }
@@ -291,7 +291,7 @@ class GachaPullButton extends StatelessWidget {
           horizontal: MGSpacing.lg,
           vertical: MGSpacing.md,
         ),
-        backgroundColor: MGColors.primary,
+        backgroundColor: MGColors.primaryAction,
         disabledBackgroundColor: Colors.grey,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
@@ -368,7 +368,7 @@ class GachaPityIndicator extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
+            const Text(
               '천장까지',
               style: TextStyle(
                 color: Colors.white70,
@@ -405,7 +405,7 @@ class GachaPityIndicator extends StatelessWidget {
                   gradient: LinearGradient(
                     colors: isSoftPityActive
                         ? [MGColors.warning, MGColors.error]
-                        : [MGColors.primary, MGColors.secondary],
+                        : [MGColors.primaryAction, MGColors.secondaryAction],
                   ),
                   borderRadius: BorderRadius.circular(4),
                 ),
