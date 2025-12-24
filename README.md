@@ -205,11 +205,110 @@ class MyGameHud extends StatelessWidget {
 - `InventorySystem` - 인벤토리 관리
 - `QuestSystem` - 퀘스트 관리
 - `LevelSystem` - 레벨/경험치 관리
+- `GachaManager` - 가챠 시스템 (천장, 픽업)
+- `BattlePassManager` - 배틀패스 시스템 (시즌, 미션)
 
 ### Features
 - `BattleEngine` - JRPG 턴제 전투
 - `IdleCalculator` - 방치 수익 계산
 - `PuzzleCore` - 퍼즐 로직 (매치3, 블록)
+
+### Monetization
+
+#### 가챠 시스템
+
+```dart
+import 'package:mg_common_game/systems/gacha/gacha_manager.dart';
+import 'package:mg_common_game/systems/gacha/gacha_pool.dart';
+
+// 가챠 풀 정의
+final pool = GachaPool(
+  id: 'banner_001',
+  nameKr: '신규 캐릭터 픽업',
+  items: [
+    GachaItem(id: 'char_001', nameKr: '레전더리 캐릭터', rarity: GachaRarity.legendary),
+    GachaItem(id: 'char_002', nameKr: 'SSR 캐릭터', rarity: GachaRarity.ultraRare),
+  ],
+  pickupItemIds: ['char_001'],
+);
+
+// 가챠 매니저 사용
+final manager = GachaManager(
+  pity: PityConfig(softPityStart: 70, hardPity: 80),
+);
+manager.addPool(pool);
+
+// 단일 뽑기
+final result = manager.pull('banner_001');
+
+// 10연차
+final results = manager.pull10('banner_001');
+```
+
+#### 배틀패스 시스템
+
+```dart
+import 'package:mg_common_game/systems/battlepass/battlepass_manager.dart';
+import 'package:mg_common_game/systems/battlepass/battlepass_config.dart';
+
+// 28일 시즌 생성
+final season = BPSeasonBuilder.create28DaySeason(
+  id: 'season_001',
+  nameKr: '시즌 1',
+  startDate: DateTime.now(),
+);
+
+// 배틀패스 매니저
+final manager = BattlePassManager();
+await manager.startSeason(season);
+
+// 경험치 추가
+manager.addExp(500);
+
+// 보상 수령
+manager.claimFreeReward(5);  // 레벨 5 무료 보상
+manager.claimPremiumReward(5);  // 레벨 5 프리미엄 보상 (프리미엄 구매 후)
+```
+
+#### 가챠/배틀패스 UI 위젯
+
+```dart
+import 'package:mg_common_game/core/ui/widgets/gacha/gacha.dart';
+import 'package:mg_common_game/core/ui/widgets/battlepass/battlepass.dart';
+
+// 가챠 뽑기 연출
+GachaPullAnimation(
+  results: pulledItems,
+  onComplete: () {},
+);
+
+// 가챠 천장 표시
+GachaPityIndicator(
+  currentPulls: 45,
+  softPity: 70,
+  hardPity: 80,
+);
+
+// 배틀패스 헤더
+BattlePassHeader(
+  seasonName: '시즌 1',
+  currentLevel: 15,
+  maxLevel: 50,
+  currentExp: 500,
+  expToNextLevel: 1000,
+  remainingDays: 14,
+  isPremium: false,
+  onPurchasePremium: () {},
+);
+
+// 배틀패스 티어 목록
+BattlePassTierList(
+  tiers: season.tiers,
+  currentLevel: 15,
+  isPremium: false,
+  onClaimReward: (level, isPremium) {},
+);
+```
 
 ## 사용 현황
 
