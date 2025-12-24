@@ -1,8 +1,12 @@
 /// Analytics Manager for MG-Games
-/// Unified event tracking across 52 games
+/// Unified event tracking across 52 games with Firebase Analytics integration
 
 import 'dart:async';
 import 'dart:collection';
+
+import 'package:firebase_analytics/firebase_analytics.dart';
+
+import '../firebase/firebase_service.dart';
 
 /// Event priority for batching
 enum EventPriority {
@@ -125,7 +129,10 @@ class AnalyticsManager {
   /// Configuration
   AnalyticsConfig? _config;
 
-  /// Event buffer
+  /// Firebase Analytics instance
+  FirebaseAnalytics? _firebaseAnalytics;
+
+  /// Event buffer for offline/batching
   final Queue<AnalyticsEvent> _eventBuffer = Queue<AnalyticsEvent>();
 
   /// User properties
@@ -150,14 +157,16 @@ class AnalyticsManager {
   Future<void> initialize(AnalyticsConfig config) async {
     _config = config;
 
+    // Get Firebase Analytics instance if available
+    if (config.firebaseEnabled && FirebaseService.instance.isInitialized) {
+      _firebaseAnalytics = FirebaseService.instance.analytics;
+    }
+
     // Start new session
     startSession();
 
-    // Start batch timer
+    // Start batch timer for offline events
     _startBatchTimer();
-
-    // TODO: Initialize Firebase Analytics
-    // FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(config.firebaseEnabled);
 
     if (config.debugMode) {
       print('AnalyticsManager initialized for $gameId');
@@ -198,27 +207,31 @@ class AnalyticsManager {
   }
 
   /// Set user ID
-  void setUserId(String userId) {
+  Future<void> setUserId(String userId) async {
     _userId = userId;
 
-    // TODO: Set Firebase user ID
-    // FirebaseAnalytics.instance.setUserId(id: userId);
+    // Set Firebase user ID
+    await _firebaseAnalytics?.setUserId(id: userId);
+    await FirebaseService.instance.setUserId(userId);
   }
 
   /// Set user property
-  void setUserProperty(String name, dynamic value) {
+  Future<void> setUserProperty(String name, dynamic value) async {
     _userProperties[name] = UserProperty(name: name, value: value);
 
-    // TODO: Set Firebase user property
-    // FirebaseAnalytics.instance.setUserProperty(name: name, value: value.toString());
+    // Set Firebase user property
+    await _firebaseAnalytics?.setUserProperty(
+      name: name,
+      value: value?.toString(),
+    );
   }
 
   /// Log event
-  void logEvent(
+  Future<void> logEvent(
     String name, {
     Map<String, dynamic> parameters = const {},
     EventPriority priority = EventPriority.normal,
-  }) {
+  }) async {
     final event = AnalyticsEvent(
       name: name,
       parameters: {
@@ -230,11 +243,22 @@ class AnalyticsManager {
       sessionId: _sessionId,
     );
 
-    _eventBuffer.add(event);
-
-    // Send immediately if critical
-    if (priority == EventPriority.critical) {
-      _sendBatch(immediate: true);
+    // Send to Firebase immediately if available
+    if (_firebaseAnalytics != null && _isOnline) {
+      try {
+        // Convert parameters to Firebase format (String, int, double, bool only)
+        final firebaseParams = _convertToFirebaseParams(event.parameters);
+        await _firebaseAnalytics!.logEvent(
+          name: name,
+          parameters: firebaseParams,
+        );
+      } catch (e) {
+        // Buffer on failure
+        _eventBuffer.add(event);
+      }
+    } else {
+      // Buffer for later
+      _eventBuffer.add(event);
     }
 
     // Trim buffer if too large
@@ -247,40 +271,66 @@ class AnalyticsManager {
     }
   }
 
+  /// Convert parameters to Firebase-compatible format
+  Map<String, Object>? _convertToFirebaseParams(Map<String, dynamic> params) {
+    if (params.isEmpty) return null;
+
+    final result = <String, Object>{};
+    params.forEach((key, value) {
+      if (value == null) return;
+
+      // Firebase only accepts String, int, double, bool
+      if (value is String || value is int || value is double || value is bool) {
+        result[key] = value;
+      } else {
+        result[key] = value.toString();
+      }
+    });
+
+    return result.isEmpty ? null : result;
+  }
+
   // ==================== Standard Events ====================
 
   /// Tutorial events
-  void logTutorialBegin() {
-    logEvent('tutorial_begin', priority: EventPriority.high);
+  Future<void> logTutorialBegin() async {
+    await _firebaseAnalytics?.logTutorialBegin();
+    await logEvent('tutorial_begin', priority: EventPriority.high);
   }
 
-  void logTutorialComplete() {
-    logEvent('tutorial_complete', priority: EventPriority.high);
+  Future<void> logTutorialComplete() async {
+    await _firebaseAnalytics?.logTutorialComplete();
+    await logEvent('tutorial_complete', priority: EventPriority.high);
   }
 
-  void logTutorialStep(int step, String stepName) {
-    logEvent('tutorial_step', parameters: {
+  Future<void> logTutorialStep(int step, String stepName) async {
+    await logEvent('tutorial_step', parameters: {
       'step': step,
       'step_name': stepName,
     });
   }
 
   /// Level/stage events
-  void logLevelStart(int level, {String? levelName, Map<String, dynamic>? extra}) {
-    logEvent('level_start', parameters: {
+  Future<void> logLevelStart(int level, {String? levelName, Map<String, dynamic>? extra}) async {
+    await _firebaseAnalytics?.logLevelStart(levelName: levelName ?? 'Level $level');
+    await logEvent('level_start', parameters: {
       'level': level,
       'level_name': levelName,
       ...?extra,
     });
   }
 
-  void logLevelComplete(int level, {
+  Future<void> logLevelComplete(int level, {
     int? score,
     int? stars,
     int? durationMs,
     Map<String, dynamic>? extra,
-  }) {
-    logEvent('level_complete', parameters: {
+  }) async {
+    await _firebaseAnalytics?.logLevelEnd(
+      levelName: 'Level $level',
+      success: 1,
+    );
+    await logEvent('level_complete', parameters: {
       'level': level,
       'score': score,
       'stars': stars,
@@ -289,8 +339,12 @@ class AnalyticsManager {
     }, priority: EventPriority.high);
   }
 
-  void logLevelFail(int level, {String? reason, int? durationMs}) {
-    logEvent('level_fail', parameters: {
+  Future<void> logLevelFail(int level, {String? reason, int? durationMs}) async {
+    await _firebaseAnalytics?.logLevelEnd(
+      levelName: 'Level $level',
+      success: 0,
+    );
+    await logEvent('level_fail', parameters: {
       'level': level,
       'reason': reason,
       'duration_ms': durationMs,
@@ -298,16 +352,25 @@ class AnalyticsManager {
   }
 
   /// Economy events
-  void logCurrencyEarned(String currencyType, int amount, String source) {
-    logEvent('currency_earned', parameters: {
+  Future<void> logCurrencyEarned(String currencyType, int amount, String source) async {
+    await _firebaseAnalytics?.logEarnVirtualCurrency(
+      virtualCurrencyName: currencyType,
+      value: amount,
+    );
+    await logEvent('currency_earned', parameters: {
       'currency_type': currencyType,
       'amount': amount,
       'source': source,
     });
   }
 
-  void logCurrencySpent(String currencyType, int amount, String itemType, String itemId) {
-    logEvent('currency_spent', parameters: {
+  Future<void> logCurrencySpent(String currencyType, int amount, String itemType, String itemId) async {
+    await _firebaseAnalytics?.logSpendVirtualCurrency(
+      virtualCurrencyName: currencyType,
+      value: amount,
+      itemName: itemId,
+    );
+    await logEvent('currency_spent', parameters: {
       'currency_type': currencyType,
       'amount': amount,
       'item_type': itemType,
@@ -315,8 +378,8 @@ class AnalyticsManager {
     });
   }
 
-  void logItemAcquired(String itemId, String itemType, String source, {int? quantity}) {
-    logEvent('item_acquired', parameters: {
+  Future<void> logItemAcquired(String itemId, String itemType, String source, {int? quantity}) async {
+    await logEvent('item_acquired', parameters: {
       'item_id': itemId,
       'item_type': itemType,
       'source': source,
@@ -325,39 +388,59 @@ class AnalyticsManager {
   }
 
   /// IAP events
-  void logPurchase(String productId, double priceUsd, String currencyCode) {
-    logEvent('purchase', parameters: {
+  Future<void> logPurchase(String productId, double priceUsd, String currencyCode) async {
+    await _firebaseAnalytics?.logPurchase(
+      value: priceUsd,
+      currency: currencyCode,
+      transactionId: '${DateTime.now().millisecondsSinceEpoch}',
+      items: [
+        AnalyticsEventItem(
+          itemId: productId,
+          itemName: productId,
+          price: priceUsd,
+        ),
+      ],
+    );
+    await logEvent('purchase', parameters: {
       'product_id': productId,
       'price_usd': priceUsd,
       'currency': currencyCode,
     }, priority: EventPriority.critical);
   }
 
-  void logPurchaseFailed(String productId, String error) {
-    logEvent('purchase_failed', parameters: {
+  Future<void> logPurchaseFailed(String productId, String error) async {
+    await logEvent('purchase_failed', parameters: {
       'product_id': productId,
       'error': error,
     }, priority: EventPriority.high);
   }
 
   /// Ad events
-  void logAdImpression(String adType, String placement, {double? revenue}) {
-    logEvent('ad_impression', parameters: {
+  Future<void> logAdImpression(String adType, String placement, {double? revenue}) async {
+    await _firebaseAnalytics?.logAdImpression(
+      adPlatform: 'admob',
+      adFormat: adType,
+      adSource: 'google',
+      adUnitName: placement,
+      value: revenue,
+      currency: 'USD',
+    );
+    await logEvent('ad_impression', parameters: {
       'ad_type': adType,
       'placement': placement,
       'revenue': revenue,
     });
   }
 
-  void logAdClick(String adType, String placement) {
-    logEvent('ad_click', parameters: {
+  Future<void> logAdClick(String adType, String placement) async {
+    await logEvent('ad_click', parameters: {
       'ad_type': adType,
       'placement': placement,
     });
   }
 
-  void logAdRewardClaimed(String placement, String rewardType, int rewardAmount) {
-    logEvent('ad_reward_claimed', parameters: {
+  Future<void> logAdRewardClaimed(String placement, String rewardType, int rewardAmount) async {
+    await logEvent('ad_reward_claimed', parameters: {
       'placement': placement,
       'reward_type': rewardType,
       'reward_amount': rewardAmount,
@@ -365,33 +448,50 @@ class AnalyticsManager {
   }
 
   /// Social events
-  void logSocialShare(String contentType, String method) {
-    logEvent('social_share', parameters: {
+  Future<void> logSocialShare(String contentType, String method) async {
+    await _firebaseAnalytics?.logShare(
+      contentType: contentType,
+      itemId: 'share',
+      method: method,
+    );
+    await logEvent('social_share', parameters: {
       'content_type': contentType,
       'method': method,
     });
   }
 
-  void logSocialInvite(String method) {
-    logEvent('social_invite', parameters: {
+  Future<void> logSocialInvite(String method) async {
+    await logEvent('social_invite', parameters: {
       'method': method,
     });
   }
 
   /// Feature usage
-  void logFeatureUsed(String featureName, {Map<String, dynamic>? extra}) {
-    logEvent('feature_used', parameters: {
+  Future<void> logFeatureUsed(String featureName, {Map<String, dynamic>? extra}) async {
+    await logEvent('feature_used', parameters: {
       'feature_name': featureName,
       ...?extra,
     });
   }
 
+  /// Screen view
+  Future<void> logScreenView(String screenName, {String? screenClass}) async {
+    await _firebaseAnalytics?.logScreenView(
+      screenName: screenName,
+      screenClass: screenClass,
+    );
+  }
+
   /// Error tracking
-  void logError(String errorType, String message, {String? stackTrace}) {
-    logEvent('error', parameters: {
+  Future<void> logError(String errorType, String message, {String? stackTrace}) async {
+    await FirebaseService.instance.recordError(
+      Exception('$errorType: $message'),
+      stackTrace != null ? StackTrace.fromString(stackTrace) : null,
+      reason: errorType,
+    );
+    await logEvent('error', parameters: {
       'error_type': errorType,
       'message': message,
-      'stack_trace': stackTrace,
     }, priority: EventPriority.high);
   }
 
@@ -410,6 +510,7 @@ class AnalyticsManager {
   Future<void> _sendBatch({bool immediate = false}) async {
     if (_eventBuffer.isEmpty) return;
     if (!_isOnline && !immediate) return;
+    if (_firebaseAnalytics == null) return;
 
     final batchSize = immediate ? _eventBuffer.length : (_config?.batchSize ?? 50);
     final batch = <AnalyticsEvent>[];
@@ -419,16 +520,16 @@ class AnalyticsManager {
     }
 
     try {
-      // TODO: Send to Firebase Analytics
-      // for (final event in batch) {
-      //   await FirebaseAnalytics.instance.logEvent(
-      //     name: event.name,
-      //     parameters: event.parameters,
-      //   );
-      // }
+      for (final event in batch) {
+        final params = _convertToFirebaseParams(event.parameters);
+        await _firebaseAnalytics!.logEvent(
+          name: event.name,
+          parameters: params,
+        );
+      }
 
       if (_config?.debugMode == true) {
-        print('Sent ${batch.length} events');
+        print('Sent ${batch.length} buffered events');
       }
     } catch (e) {
       // Put events back in buffer on failure

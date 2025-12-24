@@ -33,3 +33,4 @@ export 'models/ad_unit.dart';
 export 'models/ad_config.dart';
 export 'ad_manager.dart';
 export 'frequency_controller.dart';
+export 'adapters/admob_adapter.dart';
