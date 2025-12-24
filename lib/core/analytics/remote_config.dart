@@ -76,6 +76,7 @@ class RemoteConfigManager {
 
   /// Is initialized
   bool _isInitialized = false;
+  bool get isInitialized => _isInitialized;
 
   /// Initialize with defaults
   Future<void> initialize(Map<String, dynamic> defaults) async {

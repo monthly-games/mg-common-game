@@ -12,7 +12,7 @@ export 'theme/dark_mode_colors.dart';
 // ============================================================
 // 타이포그래피
 // ============================================================
-export 'typography/mg_text_styles.dart' hide TextScaleOption;
+export 'typography/mg_text_styles.dart';
 
 // ============================================================
 // 아이콘
