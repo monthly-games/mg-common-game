@@ -18,3 +18,13 @@ export 'systems/quests/daily_quest.dart';
 export 'systems/quests/weekly_challenge.dart';
 export 'systems/stats/statistics_manager.dart';
 export 'systems/settings/settings_manager.dart';
+
+// Gacha & BattlePass systems
+export 'systems/gacha/gacha_config.dart';
+export 'systems/gacha/gacha_manager.dart';
+export 'systems/battlepass/battlepass_config.dart';
+export 'systems/battlepass/battlepass_manager.dart';
+
+// UI Widgets
+export 'core/ui/widgets/gacha/gacha.dart';
+export 'core/ui/widgets/battlepass/battlepass.dart';
