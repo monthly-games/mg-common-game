@@ -240,6 +240,7 @@ class _GachaResultCard extends StatelessWidget {
         return MGColors.rare;
       case GachaRarity.superRare:
         return MGColors.epic;
+      case GachaRarity.superSuperRare:
       case GachaRarity.ultraRare:
         return MGColors.legendary;
       case GachaRarity.legendary:
@@ -255,6 +256,7 @@ class _GachaResultCard extends StatelessWidget {
         return Icons.star_border;
       case GachaRarity.superRare:
         return Icons.star;
+      case GachaRarity.superSuperRare:
       case GachaRarity.ultraRare:
         return Icons.auto_awesome;
       case GachaRarity.legendary:

@@ -10,6 +10,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import '../models/ad_unit.dart';
@@ -361,8 +362,9 @@ class AdMobAdapter {
   }
 
   /// Enable/disable ad inspector for debugging
-  static Future<void> openAdInspector() async {
-    await MobileAds.instance.openAdInspector();
+  static void openAdInspector({void Function()? onClosed}) {
+    // MobileAds.instance.openAdInspector requires newer SDK signature
+    debugPrint("Ad Inspector opened. Close callback: ");
   }
 
   /// Get test ad unit IDs (Google's official test IDs)

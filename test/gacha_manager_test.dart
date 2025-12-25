@@ -68,11 +68,11 @@ void main() {
         id: 'test_pool',
         nameKr: '테스트 풀',
         items: [
-          const GachaItem(id: 'n1', nameKr: 'N 캐릭터', rarity: GachaRarity.normal),
-          const GachaItem(id: 'r1', nameKr: 'R 캐릭터', rarity: GachaRarity.rare),
-          const GachaItem(id: 'sr1', nameKr: 'SR 캐릭터', rarity: GachaRarity.superRare),
-          const GachaItem(id: 'ssr1', nameKr: 'SSR 캐릭터', rarity: GachaRarity.ultraRare),
-          const GachaItem(id: 'ssr_pickup', nameKr: 'SSR 픽업', rarity: GachaRarity.ultraRare, isPickup: true),
+          GachaItem(id: 'n1', nameKr: 'N 캐릭터', rarity: GachaRarity.normal),
+          GachaItem(id: 'r1', nameKr: 'R 캐릭터', rarity: GachaRarity.rare),
+          GachaItem(id: 'sr1', nameKr: 'SR 캐릭터', rarity: GachaRarity.superRare),
+          GachaItem(id: 'ssr1', nameKr: 'SSR 캐릭터', rarity: GachaRarity.ultraRare),
+          GachaItem(id: 'ssr_pickup', nameKr: 'SSR 픽업', rarity: GachaRarity.ultraRare, isPickup: true),
         ],
         pickupItemIds: ['ssr_pickup'],
       );

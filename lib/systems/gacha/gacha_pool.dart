@@ -3,20 +3,21 @@
 /// 뽑기 풀, 확률 테이블, 천장 시스템 정의
 library;
 
+// ignore_for_file: unused_import
 import 'package:flutter/foundation.dart';
 
 /// 아이템 등급
 enum GachaRarity {
-  normal,   // N - 일반
-  rare,     // R - 레어
-  superRare,// SR - 슈퍼레어
-  ultraRare,// SSR - 울트라레어
-  legendary,// UR - 레전더리
+  normal,        // N - 일반
+  rare,          // R - 레어
+  superRare,     // SR - 슈퍼레어
+  superSuperRare,// SSR - 울트라레어 (레거시 별칭, ultraRare와 동일)
+  ultraRare,     // SSR - 울트라레어
+  legendary,     // UR - 레전더리
 }
 
 /// 등급별 기본 확률 (%)
 extension GachaRarityExtension on GachaRarity {
-  /// 기본 확률
   double get baseRate {
     switch (this) {
       case GachaRarity.normal:
@@ -25,6 +26,7 @@ extension GachaRarityExtension on GachaRarity {
         return 35.0;
       case GachaRarity.superRare:
         return 12.0;
+      case GachaRarity.superSuperRare:
       case GachaRarity.ultraRare:
         return 2.7;
       case GachaRarity.legendary:
@@ -32,7 +34,6 @@ extension GachaRarityExtension on GachaRarity {
     }
   }
 
-  /// 한글명
   String get nameKr {
     switch (this) {
       case GachaRarity.normal:
@@ -41,6 +42,7 @@ extension GachaRarityExtension on GachaRarity {
         return 'R';
       case GachaRarity.superRare:
         return 'SR';
+      case GachaRarity.superSuperRare:
       case GachaRarity.ultraRare:
         return 'SSR';
       case GachaRarity.legendary:
@@ -48,7 +50,6 @@ extension GachaRarityExtension on GachaRarity {
     }
   }
 
-  /// 색상 (Hex)
   String get colorHex {
     switch (this) {
       case GachaRarity.normal:
@@ -57,6 +58,7 @@ extension GachaRarityExtension on GachaRarity {
         return '#1EFF00';
       case GachaRarity.superRare:
         return '#0070DD';
+      case GachaRarity.superSuperRare:
       case GachaRarity.ultraRare:
         return '#A335EE';
       case GachaRarity.legendary:
@@ -68,87 +70,92 @@ extension GachaRarityExtension on GachaRarity {
 /// 가챠 아이템
 class GachaItem {
   final String id;
-  final String nameKr;
+  final String _name;
   final GachaRarity rarity;
   final String? imageAsset;
   final Map<String, dynamic> metadata;
-  final bool isLimited; // 한정 캐릭터
-  final bool isPickup;  // 픽업 대상
+  final bool isLimited;
+  final bool isPickup;
+  final double weight;
 
-  const GachaItem({
+  String get name => _name;
+  String get nameKr => _name;
+
+  /// name 또는 nameKr 파라미터를 사용하여 생성
+  GachaItem({
     required this.id,
-    required this.nameKr,
+    String? name,
+    String? nameKr,
     required this.rarity,
     this.imageAsset,
     this.metadata = const {},
     this.isLimited = false,
     this.isPickup = false,
-  });
+    this.weight = 1.0,
+  }) : _name = name ?? nameKr ?? '';
 
   GachaItem copyWith({bool? isPickup}) => GachaItem(
     id: id,
-    nameKr: nameKr,
+    name: _name,
     rarity: rarity,
     imageAsset: imageAsset,
     metadata: metadata,
     isLimited: isLimited,
     isPickup: isPickup ?? this.isPickup,
+    weight: weight,
   );
 }
 
 /// 가챠 풀 (배너)
 class GachaPool {
   final String id;
-  final String nameKr;
+  final String _name;
   final String? description;
   final List<GachaItem> items;
-  final Map<GachaRarity, double> rateOverrides; // 확률 오버라이드
-  final List<String> pickupItemIds; // 픽업 아이템 ID
-  final double pickupRateBonus; // 픽업 확률 증가 (%, SSR 중에서)
+  final Map<GachaRarity, double> rateOverrides;
+  final List<String> pickupItemIds;
+  final double pickupRateBonus;
   final DateTime? startDate;
   final DateTime? endDate;
   final bool isActive;
 
-  const GachaPool({
+  String get name => _name;
+  String get nameKr => _name;
+
+  GachaPool({
     required this.id,
-    required this.nameKr,
+    String? name,
+    String? nameKr,
     this.description,
     required this.items,
     this.rateOverrides = const {},
     this.pickupItemIds = const [],
-    this.pickupRateBonus = 50.0, // 픽업 시 50% 확률로 픽업 캐릭터
+    this.pickupRateBonus = 50.0,
     this.startDate,
     this.endDate,
     this.isActive = true,
-  });
+  }) : _name = name ?? nameKr ?? '';
 
-  /// 특정 등급의 확률
   double getRateForRarity(GachaRarity rarity) {
     return rateOverrides[rarity] ?? rarity.baseRate;
   }
 
-  /// 특정 등급의 아이템 목록
   List<GachaItem> getItemsByRarity(GachaRarity rarity) {
     return items.where((item) => item.rarity == rarity).toList();
   }
 
-  /// 픽업 아이템 목록
   List<GachaItem> get pickupItems {
     return items.where((item) => pickupItemIds.contains(item.id)).toList();
   }
 
-  /// 현재 활성화 여부
   bool get isCurrentlyActive {
     if (!isActive) return false;
-
     final now = DateTime.now();
     if (startDate != null && now.isBefore(startDate!)) return false;
     if (endDate != null && now.isAfter(endDate!)) return false;
-
     return true;
   }
 
-  /// 남은 시간 (초)
   int? get remainingSeconds {
     if (endDate == null) return null;
     final diff = endDate!.difference(DateTime.now());
@@ -158,11 +165,11 @@ class GachaPool {
 
 /// 천장 설정
 class PityConfig {
-  final int softPityStart;  // 소프트 천장 시작 (확률 증가)
-  final int hardPity;       // 하드 천장 (확정)
-  final double softPityBonus; // 소프트 천장 후 확률 증가 (%)
-  final bool resetOnHighRarity; // 고등급 획득 시 리셋
-  final GachaRarity guaranteedRarity; // 보장 등급
+  final int softPityStart;
+  final int hardPity;
+  final double softPityBonus;
+  final bool resetOnHighRarity;
+  final GachaRarity guaranteedRarity;
 
   const PityConfig({
     this.softPityStart = 70,
@@ -172,26 +179,23 @@ class PityConfig {
     this.guaranteedRarity = GachaRarity.ultraRare,
   });
 
-  /// 현재 확률 계산 (천장 보정 포함)
   double calculateAdjustedRate(int currentPity, double baseRate) {
     if (currentPity >= hardPity) {
-      return 100.0; // 확정
+      return 100.0;
     }
-
     if (currentPity >= softPityStart) {
       final bonusMultiplier = currentPity - softPityStart + 1;
       return (baseRate + softPityBonus * bonusMultiplier).clamp(0, 100);
     }
-
     return baseRate;
   }
 }
 
 /// 10연차 보장 설정
 class MultiPullGuarantee {
-  final int pullCount;         // 연차 수 (보통 10)
-  final GachaRarity minRarity; // 최소 보장 등급
-  final int guaranteedCount;   // 보장 수량
+  final int pullCount;
+  final GachaRarity minRarity;
+  final int guaranteedCount;
 
   const MultiPullGuarantee({
     this.pullCount = 10,

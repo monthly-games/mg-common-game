@@ -553,8 +553,8 @@ class AdManager {
   }
 
   /// Open ad inspector (for debugging)
-  Future<void> openAdInspector() async {
-    await AdMobAdapter.openAdInspector();
+  void openAdInspector({VoidCallback? onClosed}) {
+    AdMobAdapter.openAdInspector(onClosed: onClosed);
   }
 
   /// Emit event
