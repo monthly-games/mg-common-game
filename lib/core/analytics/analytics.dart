@@ -31,3 +31,4 @@ library analytics;
 
 export 'analytics_manager.dart';
 export 'remote_config.dart';
+export 'analytics_events.dart';
