@@ -68,3 +68,12 @@ export 'core/performance/performance.dart';
 
 // UI Animations
 export 'ui/animations/animations.dart';
+
+// Testing Utilities
+export 'testing/testing.dart';
+
+// Notification System
+export 'core/notifications/notifications.dart';
+
+// Cloud Save System
+export 'core/cloud/cloud.dart';
