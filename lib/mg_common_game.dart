@@ -56,3 +56,15 @@ export 'core/optimization/mg_optimization.dart';
 
 // Utilities
 export 'core/utils/image_utils.dart';
+
+// Localization System
+export 'core/localization/localization.dart';
+
+// Analytics System
+export 'core/analytics/analytics.dart';
+
+// Performance System
+export 'core/performance/performance.dart';
+
+// UI Animations
+export 'ui/animations/animations.dart';
