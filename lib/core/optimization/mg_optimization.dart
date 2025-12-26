@@ -7,3 +7,4 @@ export 'quality_settings.dart';
 export 'memory_manager.dart';
 export 'battery_saver.dart';
 export 'performance_monitor.dart';
+export 'auto_optimizer.dart';
