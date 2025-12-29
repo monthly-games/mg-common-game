@@ -1,372 +1,527 @@
-# mg-common-game
+# MG Common Game
 
-Flutter/Flame 기반 공통 게임 엔진, UI, 게임 시스템 모듈
+<p align="center">
+  <img src="https://img.shields.io/badge/Flutter-3.16+-blue?logo=flutter" alt="Flutter">
+  <img src="https://img.shields.io/badge/Dart-3.2+-blue?logo=dart" alt="Dart">
+  <img src="https://img.shields.io/badge/Flame-1.14+-orange?logo=flame" alt="Flame">
+  <img src="https://img.shields.io/badge/Games-52-green" alt="52 Games">
+  <img src="https://img.shields.io/badge/License-Proprietary-red" alt="License">
+</p>
 
-## 구조
+**Flutter/Flame 기반 공통 게임 엔진** - 52개 모바일 게임 포트폴리오를 위한 공유 라이브러리
 
-```
-mg-common-game/
-  ├─ lib/
-  │   ├─ core/
-  │   │   ├─ engine/          # 게임 루프, 씬 관리, 입력 처리
-  │   │   ├─ ui/              # HUD, 팝업, 버튼, 토스트 등 공통 UI
-  │   │   ├─ systems/         # 경제, 경험치, 인벤토리, 퀘스트 등 공통 시스템
-  │   │   └─ analytics/       # GA4/Firebase 이벤트 트래킹 래퍼
-  │   ├─ features/
-  │   │   ├─ battle/          # JRPG 전투 공통 모듈
-  │   │   ├─ idle/            # 방치 수익 계산, 오프라인 보상
-  │   │   └─ puzzle/          # 퍼즐(매치3/블록 등) 코어 로직
-  │   └─ api/
-  │       └─ backend_client.dart   # 서버 통신 공통 클라이언트
-  ├─ test/
-  ├─ example/                 # 공통 모듈 데모용 샘플 게임
-  ├─ docs/
-  │   └─ design/
-  │       ├─ architecture.md
-  │       └─ modules.md
-  ├─ pubspec.yaml
-  └─ .github/workflows/ci.yml
-```
+## 목차
 
-## 사용법
+- [개요](#개요)
+- [빠른 시작](#빠른-시작)
+- [시스템 아키텍처](#시스템-아키텍처)
+- [핵심 시스템](#핵심-시스템)
+- [게임 시스템](#게임-시스템)
+- [수익화 시스템](#수익화-시스템)
+- [소셜 시스템](#소셜-시스템)
+- [UI 컴포넌트](#ui-컴포넌트)
+- [개발 도구](#개발-도구)
+- [문서](#문서)
+- [52개 게임 목록](#52개-게임-목록)
 
-### 게임 레포에서 submodule로 추가
+---
+
+## 개요
+
+MG Common Game은 52개 모바일 게임 포트폴리오 프로젝트를 위한 공유 라이브러리입니다.
+
+### 특징
+
+| 카테고리 | 기능 |
+|----------|------|
+| **게임 엔진** | Flame 기반 게임 루프, 씬 관리, 에셋 관리, 오브젝트 풀링 |
+| **수익화** | 가챠 (천장/픽업), 배틀패스, 상점, 번들 |
+| **분석** | Firebase Analytics, Crashlytics, 성능 모니터링 |
+| **다국어** | 현지화 시스템, RTL 지원, 동적 폰트 |
+| **클라우드** | 클라우드 저장, 충돌 해결, 오프라인 동기화 |
+| **알림** | 로컬/푸시 알림, 예약 알림, 리텐션 알림 |
+| **테스팅** | Mock 서비스, 테스트 헬퍼, 통합 테스트 템플릿 |
+| **CI/CD** | GitHub Actions 워크플로우, 자동 빌드/배포 |
+
+### 지원 장르
+
+| 장르 | 주요 시스템 |
+|------|-------------|
+| **방치형/클리커** | OfflineProgressManager, AutoClickerManager, PrestigeManager |
+| **매치-3/머지** | Match3Board, GemTypes, PowerUps, CascadeEffect |
+| **러너/리듬** | RunnerLane, RhythmNote, JudgmentSystem, ComboManager |
+| **카드/TCG** | CardTypes, DeckManager, CardBattleState, DrawPile |
+| **RPG/전투** | BattleEntity, BattleManager, SkillSystem, TurnManager |
+
+---
+
+## 빠른 시작
+
+### 1. Submodule 추가
 
 ```bash
-git submodule add git@github.com:monthly-games/mg-common-game.git common/game
+git submodule add https://github.com/monthly-games/mg-common-game.git libs/mg_common_game
 ```
 
-### pubspec.yaml에서 참조
+### 2. pubspec.yaml 설정
 
 ```yaml
 dependencies:
   mg_common_game:
-    path: common/game
+    path: libs/mg_common_game
 ```
 
-## 주요 모듈
+### 3. 기본 사용법
 
-### Core Engine
-- `GameManager` - 게임 상태 관리
-- `SceneManager` - 씬 전환
-- `InputManager` - 입력 처리
-
-### UI Components (HUD)
-
-표준화된 게임 HUD 컴포넌트 라이브러리로 일관된 사용자 경험을 제공합니다.
-
-#### 디자인 시스템
-
-**색상 (MGColors)**
 ```dart
-import 'package:mg_common_game/core/ui/theme/mg_colors.dart';
+import 'package:mg_common_game/mg_common_game.dart';
 
-// Primary colors
-MGColors.primary          // Default brand color
-MGColors.primaryAction    // Actionable elements
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
 
-// Regional themes
-MGColors.indiaPrimary     // #FF6B35 (Orange)
-MGColors.africaPrimary    // #FFD700 (Gold)
-MGColors.seaPrimary       // #20B2AA (Teal)
-MGColors.latamPrimary     // #DC143C (Red)
+  // 코어 시스템 초기화
+  await AudioManager.instance.init();
+  await SaveManager.instance.init();
+  await AnalyticsManager.instance.init();
 
-// UI colors
-MGColors.surface          // #1E1E1E (Dark background)
-MGColors.border           // #424242 (Border/divider)
-MGColors.error, .warning, .success, .gold
-```
+  // 알림 시스템 (선택)
+  await NotificationManager.instance.initialize();
 
-**타이포그래피 (MGTextStyles)**
-```dart
-import 'package:mg_common_game/core/ui/typography/mg_text_styles.dart';
+  // 클라우드 저장 (선택)
+  await CloudSaveManager.instance.initialize(
+    gameId: 'my_game',
+    userId: 'user_123',
+  );
 
-// Display
-MGTextStyles.displayLarge, .displayMedium, .displaySmall
-
-// Headings
-MGTextStyles.h1, .h2, .h3
-
-// Body
-MGTextStyles.body, .bodySmall
-
-// HUD-specific
-MGTextStyles.hud          // 18px, Medium (main HUD text)
-MGTextStyles.hudSmall     // 14px, Medium (secondary info)
-
-// Buttons
-MGTextStyles.buttonLarge, .buttonMedium, .buttonSmall
-```
-
-**간격 (MGSpacing)**
-```dart
-import 'package:mg_common_game/core/ui/layout/mg_spacing.dart';
-
-// Values
-MGSpacing.xxs, .xs, .sm, .md, .lg, .xl, .xxl  // 2px ~ 48px
-
-// Widgets
-MGSpacing.hMd   // Horizontal 16px
-MGSpacing.vMd   // Vertical 16px
-```
-
-#### UI 컴포넌트
-
-**MGButton** - 액션 버튼
-```dart
-import 'package:mg_common_game/core/ui/widgets/buttons/mg_button.dart';
-
-// Primary button
-MGButton.primary(
-  label: 'START',
-  icon: Icons.play_arrow,
-  onPressed: () {},
-  size: MGButtonSize.medium,
-)
-
-// Secondary button
-MGButton.secondary(
-  label: 'CANCEL',
-  onPressed: () {},
-)
-```
-
-**MGIconButton** - 아이콘 버튼
-```dart
-MGIconButton(
-  icon: Icons.pause,
-  onPressed: () {},
-  buttonSize: MGIconButtonSize.medium,  // small, medium, large
-)
-```
-
-**MGResourceBar** - 리소스 표시
-```dart
-MGResourceBar(
-  icon: Icons.monetization_on,
-  value: '1,234',
-  iconColor: MGColors.gold,
-  onTap: () {},  // Optional
-)
-```
-
-**MGLinearProgress** - 프로그레스 바
-```dart
-MGLinearProgress(
-  value: 0.75,  // 0.0 to 1.0
-  height: 12,
-  valueColor: Colors.green,
-  backgroundColor: Colors.green.withOpacity(0.3),
-)
-```
-
-#### 사용 가이드
-
-전체 HUD 컴포넌트 가이드는 [MG_HUD_COMPONENT_GUIDE.md](../../MG_HUD_COMPONENT_GUIDE.md)를 참고하세요.
-
-**Quick Start**:
-```dart
-// All-in-one import
-import 'package:mg_common_game/core/ui/mg_ui.dart';
-
-class MyGameHud extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: Padding(
-        padding: EdgeInsets.all(MGSpacing.md),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                MGResourceBar(
-                  icon: Icons.star,
-                  value: '1000',
-                  iconColor: Colors.amber,
-                ),
-                const Spacer(),
-                MGIconButton(
-                  icon: Icons.pause,
-                  onPressed: () {},
-                  buttonSize: MGIconButtonSize.medium,
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  runApp(MyGameApp());
 }
 ```
 
-### Systems
-- `EconomySystem` - 재화 관리
-- `InventorySystem` - 인벤토리 관리
-- `QuestSystem` - 퀘스트 관리
-- `LevelSystem` - 레벨/경험치 관리
-- `GachaManager` - 가챠 시스템 (천장, 픽업)
-- `BattlePassManager` - 배틀패스 시스템 (시즌, 미션)
+---
 
-### Features
-- `BattleEngine` - JRPG 턴제 전투
-- `IdleCalculator` - 방치 수익 계산
-- `PuzzleCore` - 퍼즐 로직 (매치3, 블록)
+## 시스템 아키텍처
 
-### Monetization
+```
+mg_common_game/
+├── lib/
+│   ├── core/                    # 핵심 시스템
+│   │   ├── engine/              # 게임 엔진 (Flame)
+│   │   ├── audio/               # 오디오 매니저
+│   │   ├── ui/                  # UI 컴포넌트
+│   │   ├── analytics/           # 분석 시스템
+│   │   ├── localization/        # 현지화
+│   │   ├── performance/         # 성능 모니터링
+│   │   ├── optimization/        # 최적화 도구
+│   │   ├── notifications/       # 푸시 알림
+│   │   ├── cloud/               # 클라우드 저장
+│   │   └── systems/             # 저장/설정
+│   │
+│   ├── systems/                 # 게임 시스템
+│   │   ├── progression/         # 진행 (레벨, 업적, 프레스티지)
+│   │   ├── inventory/           # 인벤토리
+│   │   ├── crafting/            # 제작
+│   │   ├── quests/              # 퀘스트 (일일/주간)
+│   │   ├── stats/               # 통계
+│   │   ├── idle/                # 방치형 시스템
+│   │   ├── battle/              # 전투 시스템
+│   │   ├── gacha/               # 가챠 시스템
+│   │   ├── battlepass/          # 배틀패스
+│   │   ├── shop/                # 상점 시스템
+│   │   ├── social/              # 소셜 시스템
+│   │   ├── events/              # 이벤트 시스템
+│   │   └── settings/            # 설정
+│   │
+│   ├── ui/animations/           # UI 애니메이션
+│   ├── testing/                 # 테스팅 도구
+│   └── mg_common_game.dart      # 메인 export
+│
+├── templates/                   # 출시 템플릿
+│   ├── store/                   # 스토어 메타데이터
+│   └── legal/                   # 법적 문서
+│
+├── tools/                       # 개발 도구
+├── doc/                         # 문서
+├── example/                     # 예제 코드
+└── .github/workflows/           # CI/CD
+```
 
-#### 가챠 시스템
+---
+
+## 핵심 시스템
+
+### 오디오 시스템
 
 ```dart
-import 'package:mg_common_game/systems/gacha/gacha_manager.dart';
-import 'package:mg_common_game/systems/gacha/gacha_pool.dart';
+// 초기화
+await AudioManager.instance.init();
 
+// BGM/SFX 재생
+AudioManager.instance.playBgm('assets/audio/bgm_main.mp3');
+AudioManager.instance.playSfx('assets/audio/sfx_click.mp3');
+
+// 볼륨 조절
+AudioManager.instance.setBgmVolume(0.8);
+AudioManager.instance.setSfxVolume(1.0);
+```
+
+### 저장 시스템
+
+```dart
+// 초기화
+await SaveManager.instance.init();
+
+// 저장/로드
+await SaveManager.instance.save('player_level', 10);
+final level = SaveManager.instance.load<int>('player_level') ?? 1;
+```
+
+### 클라우드 저장
+
+```dart
+// 초기화
+await CloudSaveManager.instance.initialize(
+  gameId: 'my_game',
+  userId: 'user_123',
+  defaultResolution: ConflictResolution.useNewer,
+);
+
+// 저장 및 동기화
+await CloudSaveManager.instance.save({'level': 10, 'gold': 5000});
+await CloudSaveManager.instance.sync();
+```
+
+### 알림 시스템
+
+```dart
+// 초기화
+await NotificationManager.instance.initialize();
+await NotificationManager.instance.requestPermission();
+
+// 예약 알림
+await NotificationManager.instance.scheduleDailyRewardNotification(
+  time: NotificationScheduler.nextOccurrence(9, 0),
+);
+
+// 에너지 충전 알림
+await NotificationManager.instance.scheduleEnergyFullNotification(
+  time: NotificationScheduler.energyRefillTime(5, 10, Duration(minutes: 5)),
+);
+```
+
+### 분석 시스템
+
+```dart
+// 이벤트 추적
+AnalyticsManager.instance.logEvent('level_complete', {
+  'level': 5, 'score': 1000, 'time_seconds': 120,
+});
+
+// 화면 추적
+AnalyticsManager.instance.logScreenView('main_menu');
+```
+
+### 현지화 시스템
+
+```dart
+// 초기화
+await LocalizationManager.instance.init(
+  supportedLocales: ['ko', 'en', 'ja'],
+  defaultLocale: 'ko',
+);
+
+// 번역 사용
+final text = LocalizationManager.instance.translate('welcome_message');
+```
+
+---
+
+## 게임 시스템
+
+### 진행 시스템
+
+```dart
+// 레벨 시스템
+final levelManager = ProgressionManager();
+levelManager.addExp(100);
+
+// 업그레이드 시스템
+final upgradeManager = UpgradeManager();
+upgradeManager.registerUpgrade(Upgrade(
+  id: 'damage', baseCost: 100, costMultiplier: 1.5,
+));
+upgradeManager.purchase('damage');
+
+// 업적 시스템
+final achievementManager = AchievementManager();
+achievementManager.unlock('first_kill');
+
+// 프레스티지 시스템
+final prestigeManager = PrestigeManager(
+  formula: PrestigeFormula.logarithmic,
+);
+await prestigeManager.prestige();
+```
+
+### 방치형 시스템
+
+```dart
+// 오프라인 진행
+final offlineManager = OfflineProgressManager(
+  maxOfflineHours: 24,
+  offlineEfficiency: 0.5,
+);
+final rewards = offlineManager.calculateOfflineRewards(
+  currentGoldPerSecond: 100,
+);
+
+// 오토클리커
+final autoClicker = AutoClickerManager();
+autoClicker.purchase('basic');
+print('Total CPS: ${autoClicker.totalCps}');
+```
+
+### 전투 시스템
+
+```dart
+// 전투 엔티티
+final player = BattleEntity(
+  id: 'player',
+  stats: BattleStats(hp: 100, attack: 20, defense: 10),
+);
+
+// 전투 실행
+final battleManager = BattleManager();
+battleManager.startBattle([player], [enemy]);
+final result = battleManager.executeAttack(player, enemy);
+```
+
+---
+
+## 수익화 시스템
+
+### 가챠 시스템
+
+```dart
 // 가챠 풀 정의
 final pool = GachaPool(
   id: 'banner_001',
-  nameKr: '신규 캐릭터 픽업',
   items: [
-    GachaItem(id: 'char_001', nameKr: '레전더리 캐릭터', rarity: GachaRarity.legendary),
-    GachaItem(id: 'char_002', nameKr: 'SSR 캐릭터', rarity: GachaRarity.ultraRare),
+    GachaItem(id: 'ssr_001', rarity: GachaRarity.legendary, weight: 1),
+    GachaItem(id: 'sr_001', rarity: GachaRarity.epic, weight: 5),
   ],
-  pickupItemIds: ['char_001'],
+  pickupItemIds: ['ssr_001'],
+  pityConfig: PityConfig(softPityStart: 70, hardPity: 90),
 );
 
-// 가챠 매니저 사용
-final manager = GachaManager(
-  pity: PityConfig(softPityStart: 70, hardPity: 80),
-);
-manager.addPool(pool);
-
-// 단일 뽑기
-final result = manager.pull('banner_001');
-
-// 10연차
-final results = manager.pull10('banner_001');
+// 뽑기
+final gachaManager = GachaManager();
+gachaManager.addPool(pool);
+final result = gachaManager.pull('banner_001');
+final results = gachaManager.pull10('banner_001');
 ```
 
-#### 배틀패스 시스템
+### 배틀패스 시스템
 
 ```dart
-import 'package:mg_common_game/systems/battlepass/battlepass_manager.dart';
-import 'package:mg_common_game/systems/battlepass/battlepass_config.dart';
-
-// 28일 시즌 생성
-final season = BPSeasonBuilder.create28DaySeason(
+// 시즌 생성
+final season = BattlePassSeason(
   id: 'season_001',
-  nameKr: '시즌 1',
-  startDate: DateTime.now(),
+  maxLevel: 50,
+  tiers: [...],
 );
 
 // 배틀패스 매니저
-final manager = BattlePassManager();
-await manager.startSeason(season);
-
-// 경험치 추가
-manager.addExp(500);
-
-// 보상 수령
-manager.claimFreeReward(5);  // 레벨 5 무료 보상
-manager.claimPremiumReward(5);  // 레벨 5 프리미엄 보상 (프리미엄 구매 후)
+final battlePassManager = BattlePassManager();
+await battlePassManager.startSeason(season);
+battlePassManager.addExp(500);
+battlePassManager.claimReward(5, isPremium: true);
 ```
 
-#### 가챠/배틀패스 UI 위젯
+### 상점 시스템
 
 ```dart
-import 'package:mg_common_game/core/ui/widgets/gacha/gacha.dart';
-import 'package:mg_common_game/core/ui/widgets/battlepass/battlepass.dart';
+// 상품 등록
+shopManager.addProduct(ShopProduct(
+  id: 'gem_pack_small',
+  price: Price(amount: 0.99, currency: 'USD'),
+  rewards: {'gems': 50},
+));
 
-// 가챠 뽑기 연출
-GachaPullAnimation(
-  results: pulledItems,
-  onComplete: () {},
-);
-
-// 가챠 천장 표시
-GachaPityIndicator(
-  currentPulls: 45,
-  softPity: 70,
-  hardPity: 80,
-);
-
-// 배틀패스 헤더
-BattlePassHeader(
-  seasonName: '시즌 1',
-  currentLevel: 15,
-  maxLevel: 50,
-  currentExp: 500,
-  expToNextLevel: 1000,
-  remainingDays: 14,
-  isPremium: false,
-  onPurchasePremium: () {},
-);
-
-// 배틀패스 티어 목록
-BattlePassTierList(
-  tiers: season.tiers,
-  currentLevel: 15,
-  isPremium: false,
-  onClaimReward: (level, isPremium) {},
-);
+// 구매
+await shopManager.purchase('gem_pack_small');
 ```
 
-## 사용 현황
+---
 
-### HUD 컴포넌트 통합 게임
+## 소셜 시스템
 
-**총 40개 게임**에서 mg_common_game UI 컴포넌트를 사용하여 표준화된 HUD를 구현했습니다.
+```dart
+// 친구
+await friendManager.sendFriendRequest('user_456');
+await friendManager.sendGift('user_456', {'energy': 5});
 
-| 통합 완료 | 게임 수 | 게임 범위 |
-|---------|--------|----------|
-| ✅ Production Ready | 24 | MG-0001~0024 |
-| ✅ Design Phase | 16 | MG-0025~0052 (일부) |
+// 길드
+await guildManager.createGuild('Awesome Guild');
+await guildManager.sendMessage('Hello!');
 
-**주요 게임 예시**:
-- MG-0001 (타워 디펜스)
-- MG-0022 (미니게임)
-- MG-0032 (카드 배틀)
-- MG-0037 (보드 게임 - India)
-- MG-0038 (스포츠 - India)
-- MG-0051 (리듬 - Africa)
+// 리더보드
+await leaderboardManager.submitScore('weekly_score', 10000);
+final rankings = await leaderboardManager.getRankings('weekly_score');
+```
 
-### 컴포넌트 채택률
+---
 
-| 컴포넌트 | 사용률 |
-|---------|-------|
-| MGColors | 97% |
-| MGTextStyles | 95% |
-| MGSpacing | 95% |
-| MGButton | 92% |
-| MGIconButton | 88% |
-| MGResourceBar | 85% |
-| MGLinearProgress | 78% |
+## UI 컴포넌트
 
-**상세 통계**는 [HUD_INTEGRATION_REPORT.md](../../HUD_INTEGRATION_REPORT.md)를 참고하세요.
+### 디자인 시스템
 
-## 기여 가이드
+```dart
+import 'package:mg_common_game/core/ui/mg_ui.dart';
 
-### 새 컴포넌트 추가
+// 색상
+MGColors.primary, MGColors.gold, MGColors.error, MGColors.success
 
-1. `lib/core/ui/widgets/` 에 컴포넌트 파일 생성
-2. 테스트 작성 (`test/`)
-3. 문서 업데이트 (README.md, MG_HUD_COMPONENT_GUIDE.md)
-4. Pull Request 생성
+// 타이포그래피
+MGTextStyles.h1, MGTextStyles.body, MGTextStyles.hud
 
-### 컴포넌트 설계 원칙
+// 간격
+MGSpacing.xs (4px), MGSpacing.sm (8px), MGSpacing.md (16px), MGSpacing.lg (24px)
+```
 
-- ✅ **일관성**: 모든 게임에서 동일하게 작동
-- ✅ **재사용성**: 최소한의 props로 다양한 케이스 커버
-- ✅ **접근성**: 최소 터치 영역 44x44dp 준수
-- ✅ **성능**: Const 생성자 사용, 불필요한 리빌드 방지
-- ✅ **문서화**: 모든 public API에 dartdoc 주석
+### 주요 컴포넌트
+
+```dart
+// 버튼
+MGButton.primary(label: 'START', onPressed: () {});
+MGIconButton(icon: Icons.settings, onPressed: () {});
+
+// 리소스 표시
+MGResourceBar(icon: Icons.monetization_on, value: '1,234');
+MGLinearProgress(value: 0.75, height: 12);
+
+// 가챠/배틀패스 UI
+GachaPullAnimation(results: pulledItems, onComplete: () {});
+BattlePassHeader(seasonName: 'Season 1', currentLevel: 15);
+```
+
+---
+
+## 개발 도구
+
+### 아이콘 생성기
+
+```bash
+# 아이콘 생성
+dart run tools/generate_icons.dart --source assets/icon.png
+
+# 52개 게임 일괄 처리
+./tools/batch_generate_icons.sh
+```
+
+### 테스팅
+
+```dart
+import 'package:mg_common_game/testing/testing.dart';
+
+// 테스트 데이터
+final playerData = TestDataGenerator.playerData(level: 10);
+
+// Mock 서비스
+final mockAudio = MockAudioService();
+final mockStorage = MockStorageService();
+
+// 매처
+expect(value, GameMatchers.inRange(0, 100));
+```
+
+### CI/CD
+
+| 워크플로우 | 설명 |
+|------------|------|
+| `ci.yaml` | 라이브러리 CI (analyze, test, build) |
+| `game-ci.yaml` | 게임 CI 템플릿 |
+| `submodule-update.yaml` | 서브모듈 자동 업데이트 |
+
+---
 
 ## 문서
 
-- [HUD 컴포넌트 가이드](../../MG_HUD_COMPONENT_GUIDE.md) - 전체 컴포넌트 레퍼런스
-- [HUD 통합 리포트](../../HUD_INTEGRATION_REPORT.md) - 통합 현황 및 통계
-- [아키텍처 문서](docs/design/architecture.md)
-- [모듈 설명](docs/design/modules.md)
+| 문서 | 설명 |
+|------|------|
+| [API Reference](doc/API_REFERENCE.md) | 전체 API 레퍼런스 (900+ lines) |
+| [Coding Standards](doc/CODING_STANDARDS.md) | 코딩 표준 가이드 |
+| [Example](example/example.dart) | 사용 예제 코드 |
+| [Store Templates](templates/store/) | Google Play / App Store 메타데이터 |
+| [Legal Templates](templates/legal/) | Privacy Policy, Terms of Service |
+
+---
+
+## 52개 게임 목록
+
+52개 모바일 게임 포트폴리오 - 각 게임은 mg_common_game을 서브모듈로 사용합니다.
+
+<details>
+<summary><b>전체 게임 목록 (클릭하여 펼치기)</b></summary>
+
+### Global (01-20)
+| # | 장르 | 주요 시스템 |
+|---|------|-------------|
+| 01 | Tower Defense | BattleManager, WaveSystem |
+| 02 | Idle Clicker | OfflineProgress, AutoClicker |
+| 03 | Match-3 Puzzle | Match3Board, CascadeEffect |
+| 04 | Runner | RunnerLane, ObstacleSystem |
+| 05 | Card Battle | DeckManager, CardBattle |
+| 06 | Merge Game | MergeBoard, ItemCombine |
+| 07 | Rhythm Game | RhythmNote, JudgmentSystem |
+| 08 | RPG Adventure | BattleEntity, QuestSystem |
+| 09 | Casual Arcade | ScoreManager, ComboSystem |
+| 10 | Simulation | ResourceManager, BuildSystem |
+| 11-20 | Mixed | Various |
+
+### India (21-30)
+| # | 장르 | 특징 |
+|---|------|------|
+| 21-30 | Mixed | Regional themes, Local payment |
+
+### SEA (31-40)
+| # | 장르 | 특징 |
+|---|------|------|
+| 31-40 | Mixed | SEA optimization, Local content |
+
+### LATAM/Africa (41-52)
+| # | 장르 | 특징 |
+|---|------|------|
+| 41-52 | Mixed | Regional adaptation |
+
+</details>
+
+---
+
+## 기여 가이드
+
+### 컴포넌트 설계 원칙
+
+- **일관성**: 모든 게임에서 동일하게 작동
+- **재사용성**: 최소한의 props로 다양한 케이스 커버
+- **접근성**: 최소 터치 영역 44x44dp 준수
+- **성능**: Const 생성자, 불필요한 리빌드 방지
+- **문서화**: 모든 public API에 dartdoc 주석
+
+### 새 기능 추가
+
+1. 기능 구현 (`lib/`)
+2. 테스트 작성 (`test/`)
+3. 문서 업데이트 (`doc/`, `README.md`)
+4. Pull Request 생성
+
+---
 
 ## 라이선스
 
-Proprietary - Monthly Games Inc.
+**Proprietary** - Monthly Games Inc.
+
+---
+
+<p align="center">
+  <b>Monthly Games</b> - 52개 모바일 게임 포트폴리오 프로젝트
+</p>
