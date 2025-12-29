@@ -117,6 +117,10 @@ class NotificationManager extends ChangeNotifier {
 
   NotificationManager._();
 
+  /// 테스트용 생성자 - 싱글톤을 우회하여 독립적인 인스턴스 생성
+  @visibleForTesting
+  NotificationManager.testable();
+
   bool _initialized = false;
   bool _permissionGranted = false;
   final List<GameNotification> _pendingNotifications = [];

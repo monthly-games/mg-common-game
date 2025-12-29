@@ -212,4 +212,344 @@ void main() {
       expect(restored.amount, 100);
     });
   });
+
+  group('MissionProgress', () {
+    test('기본 생성', () {
+      final progress = MissionProgress(missionId: 'test_mission');
+
+      expect(progress.missionId, 'test_mission');
+      expect(progress.currentValue, 0);
+      expect(progress.isClaimed, false);
+    });
+
+    test('커스텀 값으로 생성', () {
+      final progress = MissionProgress(
+        missionId: 'test_mission',
+        currentValue: 5,
+        isClaimed: true,
+      );
+
+      expect(progress.currentValue, 5);
+      expect(progress.isClaimed, true);
+    });
+
+    test('toJson', () {
+      final progress = MissionProgress(
+        missionId: 'test_mission',
+        currentValue: 10,
+        isClaimed: true,
+      );
+
+      final json = progress.toJson();
+
+      expect(json['missionId'], 'test_mission');
+      expect(json['currentValue'], 10);
+      expect(json['isClaimed'], true);
+    });
+
+    test('fromJson', () {
+      final json = {
+        'missionId': 'mission_01',
+        'currentValue': 3,
+        'isClaimed': false,
+      };
+
+      final progress = MissionProgress.fromJson(json);
+
+      expect(progress.missionId, 'mission_01');
+      expect(progress.currentValue, 3);
+      expect(progress.isClaimed, false);
+    });
+
+    test('fromJson with null values', () {
+      final json = <String, dynamic>{};
+
+      final progress = MissionProgress.fromJson(json);
+
+      expect(progress.missionId, '');
+      expect(progress.currentValue, 0);
+      expect(progress.isClaimed, false);
+    });
+  });
+
+  group('BattlePassState', () {
+    test('기본 생성', () {
+      final state = BattlePassState(seasonId: 'season_1');
+
+      expect(state.seasonId, 'season_1');
+      expect(state.currentLevel, 1);
+      expect(state.currentExp, 0);
+      expect(state.isPremium, false);
+      expect(state.claimedFreeLevels, isEmpty);
+      expect(state.claimedPremiumLevels, isEmpty);
+      expect(state.missionProgress, isEmpty);
+      expect(state.premiumPurchaseDate, isNull);
+    });
+
+    test('커스텀 값으로 생성', () {
+      final purchaseDate = DateTime(2024, 1, 1);
+      final state = BattlePassState(
+        seasonId: 'season_1',
+        currentLevel: 25,
+        currentExp: 500,
+        isPremium: true,
+        claimedFreeLevels: {1, 2, 3},
+        claimedPremiumLevels: {1, 2},
+        missionProgress: {'daily_login': MissionProgress(missionId: 'daily_login')},
+        premiumPurchaseDate: purchaseDate,
+      );
+
+      expect(state.currentLevel, 25);
+      expect(state.currentExp, 500);
+      expect(state.isPremium, true);
+      expect(state.claimedFreeLevels, {1, 2, 3});
+      expect(state.claimedPremiumLevels, {1, 2});
+      expect(state.missionProgress.length, 1);
+      expect(state.premiumPurchaseDate, purchaseDate);
+    });
+
+    test('toJson', () {
+      final state = BattlePassState(
+        seasonId: 'season_1',
+        currentLevel: 10,
+        currentExp: 50,
+        isPremium: true,
+        claimedFreeLevels: {5},
+        claimedPremiumLevels: {5},
+        premiumPurchaseDate: DateTime(2024, 6, 15),
+      );
+
+      final json = state.toJson();
+
+      expect(json['seasonId'], 'season_1');
+      expect(json['currentLevel'], 10);
+      expect(json['currentExp'], 50);
+      expect(json['isPremium'], true);
+      expect(json['claimedFreeLevels'], [5]);
+      expect(json['claimedPremiumLevels'], [5]);
+      expect(json['premiumPurchaseDate'], isNotNull);
+    });
+
+    test('fromJson', () {
+      final json = {
+        'seasonId': 'season_2',
+        'currentLevel': 20,
+        'currentExp': 100,
+        'isPremium': true,
+        'claimedFreeLevels': [5, 10],
+        'claimedPremiumLevels': [5, 10, 15],
+        'missionProgress': {
+          'mission_1': {'missionId': 'mission_1', 'currentValue': 5, 'isClaimed': true}
+        },
+        'premiumPurchaseDate': '2024-01-01T00:00:00.000',
+      };
+
+      final state = BattlePassState.fromJson(json);
+
+      expect(state.seasonId, 'season_2');
+      expect(state.currentLevel, 20);
+      expect(state.currentExp, 100);
+      expect(state.isPremium, true);
+      expect(state.claimedFreeLevels, {5, 10});
+      expect(state.claimedPremiumLevels, {5, 10, 15});
+      expect(state.missionProgress.length, 1);
+      expect(state.premiumPurchaseDate, isNotNull);
+    });
+
+    test('fromJson with null values', () {
+      final json = <String, dynamic>{};
+
+      final state = BattlePassState.fromJson(json);
+
+      expect(state.seasonId, '');
+      expect(state.currentLevel, 1);
+      expect(state.currentExp, 0);
+      expect(state.isPremium, false);
+      expect(state.claimedFreeLevels, isEmpty);
+      expect(state.claimedPremiumLevels, isEmpty);
+    });
+  });
+
+  group('BattlePassManager 추가 테스트', () {
+    late BattlePassManager manager;
+    late BPSeasonConfig season;
+
+    setUp(() {
+      manager = BattlePassManager();
+      season = BPSeasonBuilder.create28DaySeason(
+        id: 'test_season',
+        nameKr: '테스트 시즌',
+        startDate: DateTime.now().subtract(const Duration(days: 1)),
+        expPerLevel: 100,
+      );
+
+      manager.setSeason(season);
+      manager.setMissions(
+        daily: BPSeasonBuilder.createDefaultDailyMissions(),
+        weekly: BPSeasonBuilder.createDefaultWeeklyMissions(),
+      );
+    });
+
+    test('onLevelUp 콜백', () {
+      int? levelUpTo;
+      manager.onLevelUp = (level) {
+        levelUpTo = level;
+      };
+
+      manager.addExp(100);
+
+      expect(levelUpTo, 2);
+    });
+
+    test('onLevelUp 콜백 - 여러 레벨', () {
+      final levels = <int>[];
+      manager.onLevelUp = (level) {
+        levels.add(level);
+      };
+
+      manager.addExp(300);
+
+      expect(levels, [2, 3, 4]);
+    });
+
+    test('onMissionComplete 콜백', () {
+      BPMission? completedMission;
+      manager.onMissionComplete = (mission) {
+        completedMission = mission;
+      };
+
+      manager.incrementMissionProgress('login');
+
+      expect(completedMission, isNotNull);
+      expect(completedMission!.id, 'daily_login');
+    });
+
+    test('updateMissionProgress', () {
+      manager.updateMissionProgress('login', 1);
+
+      expect(manager.isMissionCompleted('daily_login'), true);
+    });
+
+    test('미션 보상 수령 불가 - 미완료', () {
+      final claimed = manager.claimMissionReward('daily_login');
+      expect(claimed, false);
+    });
+
+    test('주간 미션 리셋', () {
+      manager.incrementMissionProgress('battle_count', amount: 20);
+      manager.claimMissionReward('weekly_battle_20');
+
+      manager.resetWeeklyMissions();
+
+      expect(manager.isMissionCompleted('weekly_battle_20'), false);
+    });
+
+    test('시즌 변경 시 상태 리셋', () {
+      manager.addExp(200);
+      expect(manager.currentLevel, 3);
+
+      final newSeason = BPSeasonBuilder.create28DaySeason(
+        id: 'new_season',
+        nameKr: '새 시즌',
+        startDate: DateTime.now(),
+      );
+      manager.setSeason(newSeason);
+
+      expect(manager.currentLevel, 1);
+      expect(manager.currentExp, 0);
+    });
+
+    test('같은 시즌 설정 시 상태 유지', () {
+      manager.addExp(200);
+      expect(manager.currentLevel, 3);
+
+      manager.setSeason(season);
+
+      expect(manager.currentLevel, 3);
+    });
+
+    test('unclaimedRewardCount - 초기 상태', () {
+      // 초기에는 레벨 1이므로 레벨 1 보상만 수령 가능할 수 있음
+      // 실제 보상은 tier 구성에 따라 다름
+      expect(manager.unclaimedRewardCount, greaterThanOrEqualTo(0));
+    });
+
+    test('claimAllAvailable', () {
+      manager.addExp(500); // 레벨 6
+      manager.purchasePremium();
+
+      final initialCount = manager.unclaimedRewardCount;
+      final rewards = manager.claimAllAvailable();
+
+      // claimAllAvailable 후에는 미수령 보상이 줄어들어야 함
+      // 또는 모두 수령했으면 0
+      expect(manager.unclaimedRewardCount, lessThanOrEqualTo(initialCount));
+    });
+
+    test('state null일 때 addExp 무시', () {
+      manager.endSeason();
+      manager.addExp(100);
+
+      expect(manager.currentExp, 0);
+      expect(manager.currentLevel, 1);
+    });
+
+    test('state null일 때 expToNextLevel은 0', () {
+      manager.endSeason();
+      expect(manager.expToNextLevel, 0);
+    });
+
+    test('state null일 때 levelProgress는 0', () {
+      manager.endSeason();
+      expect(manager.levelProgress, 0);
+    });
+
+    test('state null일 때 unclaimedRewardCount는 0', () {
+      manager.endSeason();
+      expect(manager.unclaimedRewardCount, 0);
+    });
+
+    test('state null일 때 purchasePremium 무시', () {
+      manager.endSeason();
+      manager.purchasePremium();
+      expect(manager.isPremium, false);
+    });
+
+    test('state null일 때 updateMissionProgress 무시', () {
+      manager.endSeason();
+      manager.updateMissionProgress('login', 1);
+      // 에러 없이 실행됨
+    });
+
+    test('state null일 때 incrementMissionProgress 무시', () {
+      manager.endSeason();
+      manager.incrementMissionProgress('login');
+      // 에러 없이 실행됨
+    });
+
+    test('state null일 때 claimMissionReward는 false', () {
+      manager.endSeason();
+      expect(manager.claimMissionReward('daily_login'), false);
+    });
+
+    test('최대 레벨에서 expToNextLevel은 0', () {
+      manager.addExp(100000);
+      expect(manager.currentLevel, 50);
+      expect(manager.expToNextLevel, 0);
+    });
+
+    test('최대 레벨에서 levelProgress는 1.0', () {
+      manager.addExp(100000);
+      expect(manager.levelProgress, 1.0);
+    });
+
+    test('보상 수령 불가 - 레벨 미달', () {
+      expect(manager.canClaimReward(10, isPremiumReward: false), false);
+    });
+
+    test('프리미엄 보상 수령 불가 - 프리미엄 아님', () {
+      manager.addExp(1000);
+      expect(manager.canClaimReward(5, isPremiumReward: true), false);
+    });
+  });
 }

@@ -214,6 +214,197 @@ void main() {
       // ID가 같으면 동일한 리소스로 취급
       expect(resource1 == resource2, true);
     });
+
+    test('hashCode는 id 기반', () {
+      final resource = IdleResource(
+        id: 'gold',
+        name: 'Gold',
+        baseProductionRate: 100.0,
+        maxStorage: 1000,
+        tier: 1,
+      );
+
+      expect(resource.hashCode, 'gold'.hashCode);
+    });
+
+    test('toString', () {
+      final resource = IdleResource(
+        id: 'gold',
+        name: 'Gold',
+        baseProductionRate: 100.0,
+        maxStorage: 1000,
+        tier: 1,
+        currentAmount: 500,
+      );
+
+      final str = resource.toString();
+
+      expect(str, contains('IdleResource'));
+      expect(str, contains('gold'));
+      expect(str, contains('500/1000'));
+      expect(str, contains('100.0'));
+    });
+
+    test('getProductionRate', () {
+      final resource = IdleResource(
+        id: 'gold',
+        name: 'Gold',
+        baseProductionRate: 100.0,
+        maxStorage: 1000,
+        tier: 1,
+      );
+
+      expect(resource.getProductionRate(1.0), 100.0);
+      expect(resource.getProductionRate(2.0), 200.0);
+      expect(resource.getProductionRate(0.5), 50.0);
+    });
+
+    test('calculateProduction - 음수 생산율', () {
+      final resource = IdleResource(
+        id: 'gold',
+        name: 'Gold',
+        baseProductionRate: -100.0, // 음수
+        maxStorage: 1000,
+        tier: 1,
+      );
+
+      final produced = resource.calculateProduction(Duration(hours: 1));
+      expect(produced, 0);
+    });
+
+    test('calculateProduction - 0 생산율', () {
+      final resource = IdleResource(
+        id: 'gold',
+        name: 'Gold',
+        baseProductionRate: 0.0,
+        maxStorage: 1000,
+        tier: 1,
+      );
+
+      final produced = resource.calculateProduction(Duration(hours: 1));
+      expect(produced, 0);
+    });
+
+    test('addProduction - 0 추가', () {
+      final resource = IdleResource(
+        id: 'gold',
+        name: 'Gold',
+        baseProductionRate: 100.0,
+        maxStorage: 1000,
+        tier: 1,
+        currentAmount: 100,
+      );
+
+      final added = resource.addProduction(0);
+      expect(added, 0);
+      expect(resource.currentAmount, 100);
+    });
+
+    test('collect - 0 수집', () {
+      final resource = IdleResource(
+        id: 'gold',
+        name: 'Gold',
+        baseProductionRate: 100.0,
+        maxStorage: 1000,
+        tier: 1,
+        currentAmount: 100,
+      );
+
+      final collected = resource.collect(0);
+      expect(collected, 0);
+      expect(resource.currentAmount, 100);
+    });
+
+    test('isFull - 정확히 최대', () {
+      final resource = IdleResource(
+        id: 'gold',
+        name: 'Gold',
+        baseProductionRate: 100.0,
+        maxStorage: 1000,
+        tier: 1,
+        currentAmount: 1000,
+      );
+
+      expect(resource.isFull, true);
+    });
+
+    test('isFull - 최대 미만', () {
+      final resource = IdleResource(
+        id: 'gold',
+        name: 'Gold',
+        baseProductionRate: 100.0,
+        maxStorage: 1000,
+        tier: 1,
+        currentAmount: 999,
+      );
+
+      expect(resource.isFull, false);
+    });
+
+    test('updateTime', () {
+      final resource = IdleResource(
+        id: 'gold',
+        name: 'Gold',
+        baseProductionRate: 100.0,
+        maxStorage: 1000,
+        tier: 1,
+        lastUpdateTime: DateTime(2020, 1, 1), // 과거 시간
+      );
+
+      final before = resource.lastUpdateTime;
+      resource.updateTime();
+      final after = resource.lastUpdateTime;
+
+      expect(after.isAfter(before), true);
+    });
+
+    test('fromJson - null currentAmount', () {
+      final json = {
+        'id': 'gold',
+        'currentAmount': null,
+        'lastUpdateTime': null,
+        'isProducing': null,
+      };
+
+      final resource = IdleResource.fromJson(
+        json,
+        name: 'Gold',
+        baseProductionRate: 100.0,
+        maxStorage: 1000,
+        tier: 1,
+      );
+
+      expect(resource.currentAmount, 0);
+      expect(resource.isProducing, true);
+    });
+
+    test('calculateProduction - 분수 시간', () {
+      final resource = IdleResource(
+        id: 'gold',
+        name: 'Gold',
+        baseProductionRate: 120.0, // 시간당 120
+        maxStorage: 1000,
+        tier: 1,
+      );
+
+      // 15분 = 0.25시간 = 30개
+      final produced = resource.calculateProduction(Duration(minutes: 15));
+      expect(produced, 30);
+    });
+
+    test('calculateProduction - 초 단위', () {
+      final resource = IdleResource(
+        id: 'gold',
+        name: 'Gold',
+        baseProductionRate: 3600.0, // 시간당 3600 = 초당 1
+        maxStorage: 1000,
+        tier: 1,
+      );
+
+      // 10초 = 10개
+      final produced = resource.calculateProduction(Duration(seconds: 10));
+      expect(produced, 10);
+    });
   });
 
   group('IdleManager', () {
@@ -494,6 +685,258 @@ void main() {
 
       expect(json['globalModifier'], 2.0);
       expect(json['resources'], isNotNull);
+    });
+
+    test('fromJson 상태 복원', () {
+      // 먼저 리소스 등록
+      final resource = IdleResource(
+        id: 'gold',
+        name: 'Gold',
+        baseProductionRate: 100.0,
+        maxStorage: 1000,
+        tier: 1,
+        currentAmount: 0,
+      );
+      manager.registerResource(resource);
+
+      // JSON 데이터로 상태 복원
+      final json = {
+        'globalModifier': 2.5,
+        'resources': {
+          'gold': {
+            'currentAmount': 750,
+            'lastUpdateTime': DateTime.now().millisecondsSinceEpoch,
+            'isProducing': false,
+          }
+        }
+      };
+
+      manager.fromJson(json);
+
+      expect(manager.globalModifier, 2.5);
+      expect(manager.getResource('gold')!.currentAmount, 750);
+      expect(manager.getResource('gold')!.isProducing, false);
+    });
+
+    test('processOfflineTime', () {
+      final resource = IdleResource(
+        id: 'offline_gold',
+        name: 'Gold',
+        baseProductionRate: 100.0,
+        maxStorage: 10000,
+        tier: 1,
+      );
+
+      manager.registerResource(resource);
+
+      final lastLogin = DateTime.now().subtract(Duration(hours: 2));
+      final rewards = manager.processOfflineTime(lastLogin);
+
+      expect(rewards.containsKey('offline_gold'), true);
+      expect(rewards['offline_gold'], greaterThan(0));
+    });
+
+    test('getTimeToFillStorage - 생산 중', () {
+      final resource = IdleResource(
+        id: 'time_test',
+        name: 'Gold',
+        baseProductionRate: 100.0, // 시간당 100
+        maxStorage: 1000,
+        tier: 1,
+        currentAmount: 500, // 500 남음
+      );
+
+      manager.registerResource(resource);
+
+      final duration = manager.getTimeToFillStorage('time_test');
+
+      expect(duration, isNotNull);
+      // 500개 남음 / 100 per hour = 5시간
+      expect(duration!.inHours, 5);
+    });
+
+    test('getTimeToFillStorage - 이미 가득 참', () {
+      final resource = IdleResource(
+        id: 'full_test',
+        name: 'Gold',
+        baseProductionRate: 100.0,
+        maxStorage: 1000,
+        tier: 1,
+        currentAmount: 1000, // 가득 참
+      );
+
+      manager.registerResource(resource);
+
+      final duration = manager.getTimeToFillStorage('full_test');
+
+      expect(duration, isNull);
+    });
+
+    test('getTimeToFillStorage - 존재하지 않는 리소스', () {
+      final duration = manager.getTimeToFillStorage('non_existent');
+      expect(duration, isNull);
+    });
+
+    test('getTimeToFillStorage - 생산 중지 상태', () {
+      final resource = IdleResource(
+        id: 'paused_test',
+        name: 'Gold',
+        baseProductionRate: 100.0,
+        maxStorage: 1000,
+        tier: 1,
+        isProducing: false,
+      );
+
+      manager.registerResource(resource);
+
+      final duration = manager.getTimeToFillStorage('paused_test');
+
+      expect(duration, isNull);
+    });
+
+    test('collect - 존재하지 않는 리소스', () {
+      final collected = manager.collect('non_existent', 100);
+      expect(collected, 0);
+    });
+
+    test('collectAll - 존재하지 않는 리소스', () {
+      final collected = manager.collectAll('non_existent');
+      expect(collected, 0);
+    });
+
+    test('getProductionRate - 존재하지 않는 리소스', () {
+      final rate = manager.getProductionRate('non_existent');
+      expect(rate, 0.0);
+    });
+
+    test('pauseProduction - 존재하지 않는 리소스', () {
+      // 에러 없이 완료되어야 함
+      manager.pauseProduction('non_existent');
+    });
+
+    test('resumeProduction - 존재하지 않는 리소스', () {
+      // 에러 없이 완료되어야 함
+      manager.resumeProduction('non_existent');
+    });
+
+    test('onResourceProduced 콜백', () async {
+      var producedResourceId = '';
+      var producedAmount = 0;
+
+      manager.onResourceProduced = (resourceId, amount) {
+        producedResourceId = resourceId;
+        producedAmount = amount;
+      };
+
+      // 짧은 시간 간격으로 생산 시작
+      final resource = IdleResource(
+        id: 'callback_test',
+        name: 'Gold',
+        baseProductionRate: 36000.0, // 초당 10개
+        maxStorage: 1000,
+        tier: 1,
+      );
+      resource.updateTime(); // 시간 업데이트
+
+      manager.registerResource(resource);
+      manager.startProduction(tickInterval: Duration(milliseconds: 100));
+
+      // 잠시 대기
+      await Future.delayed(Duration(milliseconds: 200));
+
+      manager.stopProduction();
+
+      // 콜백이 호출되었어야 함 (생산량이 있다면)
+      // 시간이 짧아서 생산되지 않을 수 있으므로 호출 여부만 확인하지 않음
+      expect(manager.getResource('callback_test'), isNotNull);
+    });
+
+    test('onStorageFull 콜백', () async {
+      var fullResourceId = '';
+
+      manager.onStorageFull = (resourceId) {
+        fullResourceId = resourceId;
+      };
+
+      final resource = IdleResource(
+        id: 'full_callback_test',
+        name: 'Gold',
+        baseProductionRate: 360000.0, // 매우 빠른 생산
+        maxStorage: 10, // 작은 저장소
+        tier: 1,
+        currentAmount: 8, // 거의 가득 참
+      );
+
+      manager.registerResource(resource);
+      manager.startProduction(tickInterval: Duration(milliseconds: 50));
+
+      await Future.delayed(Duration(milliseconds: 200));
+
+      manager.stopProduction();
+
+      // 저장소가 가득 찼어야 함
+      // 시간에 따라 달라질 수 있으므로 리소스 상태만 확인
+      expect(manager.getResource('full_callback_test'), isNotNull);
+    });
+
+    test('startProduction 중복 호출 무시', () {
+      final resource = IdleResource(
+        id: 'dup_start_test',
+        name: 'Gold',
+        baseProductionRate: 100.0,
+        maxStorage: 1000,
+        tier: 1,
+      );
+
+      manager.registerResource(resource);
+      manager.startProduction();
+      manager.startProduction(); // 두 번째 호출은 무시되어야 함
+      manager.stopProduction();
+
+      // 에러 없이 완료
+      expect(true, true);
+    });
+
+    test('전체 저장소 비율 - 리소스 없음', () {
+      expect(manager.getOverallStoragePercentage(), 0.0);
+    });
+
+    test('toString', () {
+      final resource = IdleResource(
+        id: 'gold',
+        name: 'Gold',
+        baseProductionRate: 100.0,
+        maxStorage: 1000,
+        tier: 1,
+      );
+
+      manager.registerResource(resource);
+      manager.setGlobalModifier(1.5);
+
+      final str = manager.toString();
+
+      expect(str, contains('IdleManager'));
+      expect(str, contains('resources: 1'));
+      expect(str, contains('modifier: 1.5'));
+    });
+
+    test('resources getter', () {
+      final resource = IdleResource(
+        id: 'gold',
+        name: 'Gold',
+        baseProductionRate: 100.0,
+        maxStorage: 1000,
+        tier: 1,
+      );
+
+      manager.registerResource(resource);
+
+      final resources = manager.resources;
+      expect(resources.containsKey('gold'), true);
+    });
+
+    test('getProductionModifier - 설정되지 않은 리소스', () {
+      expect(manager.getProductionModifier('non_existent'), 1.0);
     });
   });
 

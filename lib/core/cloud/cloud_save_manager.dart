@@ -123,6 +123,10 @@ class CloudSaveManager extends ChangeNotifier {
 
   CloudSaveManager._();
 
+  /// 테스트용 생성자 - 싱글톤을 우회하여 독립적인 인스턴스 생성
+  @visibleForTesting
+  CloudSaveManager.testable();
+
   bool _initialized = false;
   String? _gameId;
   String? _userId;
@@ -149,6 +153,44 @@ class CloudSaveManager extends ChangeNotifier {
 
   /// Cloud save data
   CloudSaveData? get cloudSave => _cloudSave;
+
+  // ============================================================
+  // 테스트용 접근자 (visibleForTesting)
+  // ============================================================
+
+  @visibleForTesting
+  set localSaveForTest(CloudSaveData? save) => _localSave = save;
+
+  @visibleForTesting
+  set cloudSaveForTest(CloudSaveData? save) => _cloudSave = save;
+
+  @visibleForTesting
+  set initializedForTest(bool value) => _initialized = value;
+
+  @visibleForTesting
+  set gameIdForTest(String id) => _gameId = id;
+
+  @visibleForTesting
+  set userIdForTest(String id) => _userId = id;
+
+  @visibleForTesting
+  bool hasConflictForTest(CloudSaveData local, CloudSaveData cloud) =>
+      _hasConflict(local, cloud);
+
+  @visibleForTesting
+  CloudSaveData resolveWithStrategyForTest(ConflictResolution strategy) =>
+      _resolveWithStrategy(strategy);
+
+  @visibleForTesting
+  CloudSaveData mergeSavesForTest(CloudSaveData local, CloudSaveData cloud) =>
+      _mergeSaves(local, cloud);
+
+  @visibleForTesting
+  String generateChecksumForTest(Map<String, dynamic> data) =>
+      _generateChecksum(data);
+
+  @visibleForTesting
+  String generateSaveIdForTest() => _generateSaveId();
 
   /// Initialize cloud save manager
   Future<void> initialize({

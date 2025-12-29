@@ -197,7 +197,16 @@ void main() {
       expect(effect.value, 5);
     });
 
-    test('영구 효과', () {
+    test('기본 value는 0', () {
+      final effect = BattleEffect(
+        type: EffectType.weak,
+        duration: 2,
+      );
+
+      expect(effect.value, 0);
+    });
+
+    test('영구 효과 - 정확히 999', () {
       final permanent = BattleEffect(
         type: EffectType.strength,
         duration: 999,
@@ -207,7 +216,41 @@ void main() {
       expect(permanent.isPermanent, true);
     });
 
-    test('copyWith', () {
+    test('영구 효과 - 999 이상', () {
+      final permanent = BattleEffect(
+        type: EffectType.strength,
+        duration: 1000,
+        value: 10,
+      );
+
+      expect(permanent.isPermanent, true);
+    });
+
+    test('비영구 효과', () {
+      final temporary = BattleEffect(
+        type: EffectType.poison,
+        duration: 998,
+        value: 5,
+      );
+
+      expect(temporary.isPermanent, false);
+    });
+
+    test('copyWith - type만 변경', () {
+      final original = BattleEffect(
+        type: EffectType.poison,
+        duration: 3,
+        value: 5,
+      );
+
+      final modified = original.copyWith(type: EffectType.burn);
+
+      expect(modified.type, EffectType.burn);
+      expect(modified.duration, 3);
+      expect(modified.value, 5);
+    });
+
+    test('copyWith - duration만 변경', () {
       final original = BattleEffect(
         type: EffectType.poison,
         duration: 3,
@@ -217,7 +260,51 @@ void main() {
       final modified = original.copyWith(duration: 5);
 
       expect(modified.duration, 5);
+      expect(modified.type, EffectType.poison);
       expect(modified.value, 5);
+    });
+
+    test('copyWith - value만 변경', () {
+      final original = BattleEffect(
+        type: EffectType.poison,
+        duration: 3,
+        value: 5,
+      );
+
+      final modified = original.copyWith(value: 10);
+
+      expect(modified.value, 10);
+      expect(modified.type, EffectType.poison);
+      expect(modified.duration, 3);
+    });
+
+    test('copyWith - 모든 필드 변경', () {
+      final original = BattleEffect(
+        type: EffectType.poison,
+        duration: 3,
+        value: 5,
+      );
+
+      final modified = original.copyWith(
+        type: EffectType.burn,
+        duration: 10,
+        value: 20,
+      );
+
+      expect(modified.type, EffectType.burn);
+      expect(modified.duration, 10);
+      expect(modified.value, 20);
+    });
+
+    test('toString', () {
+      final effect = BattleEffect(
+        type: EffectType.poison,
+        duration: 3,
+        value: 5,
+      );
+
+      expect(
+          effect.toString(), 'BattleEffect(EffectType.poison, dur: 3, val: 5)');
     });
   });
 
@@ -311,6 +398,8 @@ void main() {
       expect(result.damage, 15);
       expect(result.isCritical, false);
       expect(result.isBlocked, false);
+      expect(result.blockedAmount, 0);
+      expect(result.appliedEffects, isEmpty);
     });
 
     test('크리티컬 히트', () {
@@ -327,6 +416,43 @@ void main() {
       );
 
       expect(result.actualDamage, 10);
+    });
+
+    test('actualDamage - 블록되지 않은 경우', () {
+      const result = AttackResult(damage: 25, isBlocked: false);
+
+      expect(result.actualDamage, 25);
+    });
+
+    test('actualDamage - 완전 블록', () {
+      const result = AttackResult(
+        damage: 10,
+        isBlocked: true,
+        blockedAmount: 15,
+      );
+
+      expect(result.actualDamage, 0); // clamp(0, damage)
+    });
+
+    test('actualDamage - 정확히 같은 블록', () {
+      const result = AttackResult(
+        damage: 20,
+        isBlocked: true,
+        blockedAmount: 20,
+      );
+
+      expect(result.actualDamage, 0);
+    });
+
+    test('appliedEffects 포함', () {
+      const result = AttackResult(
+        damage: 20,
+        appliedEffects: [EffectType.poison, EffectType.weak],
+      );
+
+      expect(result.appliedEffects.length, 2);
+      expect(result.appliedEffects.contains(EffectType.poison), true);
+      expect(result.appliedEffects.contains(EffectType.weak), true);
     });
   });
 
