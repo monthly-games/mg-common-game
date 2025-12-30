@@ -5,6 +5,8 @@
   <img src="https://img.shields.io/badge/Dart-3.2+-blue?logo=dart" alt="Dart">
   <img src="https://img.shields.io/badge/Flame-1.14+-orange?logo=flame" alt="Flame">
   <img src="https://img.shields.io/badge/Games-52-green" alt="52 Games">
+  <img src="https://img.shields.io/badge/Tests-1807-brightgreen" alt="1807 Tests">
+  <img src="https://img.shields.io/badge/Coverage-92.4%25-brightgreen" alt="92.4% Coverage">
   <img src="https://img.shields.io/badge/License-Proprietary-red" alt="License">
 </p>
 
@@ -40,7 +42,7 @@ MG Common Game은 52개 모바일 게임 포트폴리오 프로젝트를 위한 
 | **다국어** | 현지화 시스템, RTL 지원, 동적 폰트 |
 | **클라우드** | 클라우드 저장, 충돌 해결, 오프라인 동기화 |
 | **알림** | 로컬/푸시 알림, 예약 알림, 리텐션 알림 |
-| **테스팅** | Mock 서비스, 테스트 헬퍼, 통합 테스트 템플릿 |
+| **테스팅** | 1,807개 테스트, 92.4% 커버리지, 통합 테스트 |
 | **CI/CD** | GitHub Actions 워크플로우, 자동 빌드/배포 |
 
 ### 지원 장르
