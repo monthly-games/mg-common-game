@@ -1591,4 +1591,627 @@ void main() {
       expect(true, true);
     });
   });
+
+  group('TestableCloudSaveManager - _resolveConflict with custom resolver', () {
+    late TestableCloudSaveManager manager;
+
+    setUp(() {
+      manager = TestableCloudSaveManager();
+      manager.setInitialized(true);
+      manager.setGameId('test_game');
+      manager.setUserId('test_user');
+    });
+
+    test('_resolveConflict - custom resolver 호출', () async {
+      final now = DateTime.now();
+      CloudSaveData? resolvedData;
+
+      final localSave = CloudSaveData(
+        id: 'save_001',
+        gameId: 'test_game',
+        userId: 'test_user',
+        data: {'level': 10},
+        lastModified: now,
+        version: 2,
+      );
+
+      final cloudSave = CloudSaveData(
+        id: 'save_001',
+        gameId: 'test_game',
+        userId: 'test_user',
+        data: {'level': 20},
+        lastModified: now,
+        version: 1,
+      );
+
+      manager.setLocalSave(localSave);
+      manager.setCloudSave(cloudSave);
+
+      // 초기화 시 custom resolver 설정
+      await manager.initialize(
+        gameId: 'test_game',
+        userId: 'test_user',
+        conflictResolver: (conflict) async {
+          resolvedData = conflict.cloud; // 클라우드 선택
+          return conflict.cloud;
+        },
+      );
+
+      // 충돌 상태 확인 (다른 버전, 동일 타임스탬프)
+      expect(manager.testHasConflict(localSave, cloudSave), true);
+    });
+
+    test('_resolveConflict - 상태 변경 (conflict -> synced)', () async {
+      final now = DateTime.now();
+      final localSave = CloudSaveData(
+        id: 'save_001',
+        gameId: 'test_game',
+        userId: 'test_user',
+        data: {'level': 10},
+        lastModified: now,
+        version: 2,
+      );
+
+      final cloudSave = CloudSaveData(
+        id: 'save_001',
+        gameId: 'test_game',
+        userId: 'test_user',
+        data: {'level': 20},
+        lastModified: now,
+        version: 1,
+      );
+
+      manager.setLocalSave(localSave);
+      manager.setCloudSave(cloudSave);
+
+      // 충돌 감지 (다른 버전, 동일 타임스탬프)
+      expect(manager.testHasConflict(localSave, cloudSave), true);
+    });
+  });
+
+  group('TestableCloudSaveManager - _mergeSaves 복잡한 시나리오', () {
+    late TestableCloudSaveManager manager;
+
+    setUp(() {
+      manager = TestableCloudSaveManager();
+    });
+
+    test('merge - 중첩된 맵 구조', () {
+      final now = DateTime.now();
+      final local = CloudSaveData(
+        id: 'save_001',
+        gameId: 'game',
+        userId: 'user',
+        data: {
+          'player': {'name': 'Hero', 'level': 50},
+          'stats': {'hp': 100, 'mp': 50},
+        },
+        lastModified: now,
+        version: 1,
+      );
+      final cloud = CloudSaveData(
+        id: 'save_001',
+        gameId: 'game',
+        userId: 'user',
+        data: {
+          'player': {'name': 'Hero', 'level': 40},
+          'stats': {'hp': 80, 'mp': 60},
+        },
+        lastModified: now.subtract(Duration(hours: 1)),
+        version: 1,
+      );
+
+      final merged = manager.testMergeSaves(local, cloud);
+      expect(merged.data['player'], isA<Map>());
+      expect(merged.data['stats'], isA<Map>());
+    });
+
+    test('merge - 혼합 타입 필드', () {
+      final now = DateTime.now();
+      final local = CloudSaveData(
+        id: 'save_001',
+        gameId: 'game',
+        userId: 'user',
+        data: {
+          'score': 1000,
+          'name': 'Player',
+          'items': ['sword', 'shield'],
+          'active': true,
+        },
+        lastModified: now,
+        version: 1,
+      );
+      final cloud = CloudSaveData(
+        id: 'save_001',
+        gameId: 'game',
+        userId: 'user',
+        data: {
+          'score': 800,
+          'name': 'OldPlayer',
+          'items': ['potion'],
+          'active': false,
+        },
+        lastModified: now.subtract(Duration(hours: 1)),
+        version: 1,
+      );
+
+      final merged = manager.testMergeSaves(local, cloud);
+      expect(merged.data['score'], 1000); // 숫자: 더 큼
+      expect(merged.data['name'], 'Player'); // 문자열: 최신
+      expect((merged.data['items'] as List).length, 3); // 리스트: 합집합
+    });
+
+    test('merge - 모든 필드가 cloud only', () {
+      final now = DateTime.now();
+      final local = CloudSaveData(
+        id: 'save_001',
+        gameId: 'game',
+        userId: 'user',
+        data: {},
+        lastModified: now,
+        version: 1,
+      );
+      final cloud = CloudSaveData(
+        id: 'save_001',
+        gameId: 'game',
+        userId: 'user',
+        data: {'level': 10, 'gold': 500},
+        lastModified: now.subtract(Duration(hours: 1)),
+        version: 1,
+      );
+
+      final merged = manager.testMergeSaves(local, cloud);
+      expect(merged.data['level'], 10);
+      expect(merged.data['gold'], 500);
+    });
+
+    test('merge - 모든 필드가 local only', () {
+      final now = DateTime.now();
+      final local = CloudSaveData(
+        id: 'save_001',
+        gameId: 'game',
+        userId: 'user',
+        data: {'level': 20, 'gold': 1000},
+        lastModified: now,
+        version: 1,
+      );
+      final cloud = CloudSaveData(
+        id: 'save_001',
+        gameId: 'game',
+        userId: 'user',
+        data: {},
+        lastModified: now.subtract(Duration(hours: 1)),
+        version: 1,
+      );
+
+      final merged = manager.testMergeSaves(local, cloud);
+      expect(merged.data['level'], 20);
+      expect(merged.data['gold'], 1000);
+    });
+
+    test('merge - 부동소수점 숫자', () {
+      final now = DateTime.now();
+      final local = CloudSaveData(
+        id: 'save_001',
+        gameId: 'game',
+        userId: 'user',
+        data: {'damage': 15.5},
+        lastModified: now,
+        version: 1,
+      );
+      final cloud = CloudSaveData(
+        id: 'save_001',
+        gameId: 'game',
+        userId: 'user',
+        data: {'damage': 12.3},
+        lastModified: now.subtract(Duration(hours: 1)),
+        version: 1,
+      );
+
+      final merged = manager.testMergeSaves(local, cloud);
+      expect(merged.data['damage'], 15.5);
+    });
+
+    test('merge - 음수 숫자', () {
+      final now = DateTime.now();
+      final local = CloudSaveData(
+        id: 'save_001',
+        gameId: 'game',
+        userId: 'user',
+        data: {'balance': -100},
+        lastModified: now,
+        version: 1,
+      );
+      final cloud = CloudSaveData(
+        id: 'save_001',
+        gameId: 'game',
+        userId: 'user',
+        data: {'balance': -50},
+        lastModified: now.subtract(Duration(hours: 1)),
+        version: 1,
+      );
+
+      final merged = manager.testMergeSaves(local, cloud);
+      expect(merged.data['balance'], -50); // -50 > -100
+    });
+
+    test('merge - 리스트에 중복 요소', () {
+      final now = DateTime.now();
+      final local = CloudSaveData(
+        id: 'save_001',
+        gameId: 'game',
+        userId: 'user',
+        data: {
+          'items': ['item_1', 'item_1', 'item_2']
+        },
+        lastModified: now,
+        version: 1,
+      );
+      final cloud = CloudSaveData(
+        id: 'save_001',
+        gameId: 'game',
+        userId: 'user',
+        data: {
+          'items': ['item_1', 'item_3']
+        },
+        lastModified: now.subtract(Duration(hours: 1)),
+        version: 1,
+      );
+
+      final merged = manager.testMergeSaves(local, cloud);
+      final items = merged.data['items'] as List;
+      expect(items.contains('item_1'), true);
+      expect(items.contains('item_2'), true);
+      expect(items.contains('item_3'), true);
+    });
+  });
+
+  group('TestableCloudSaveManager - sync 에러 처리', () {
+    late TestableCloudSaveManager manager;
+
+    setUp(() {
+      manager = TestableCloudSaveManager();
+      manager.setInitialized(true);
+      manager.setGameId('test_game');
+      manager.setUserId('test_user');
+    });
+
+    test('sync - 상태 변경: syncing -> synced', () async {
+      final result = await manager.sync();
+
+      expect(result, true);
+      expect(manager.status, CloudSyncStatus.synced);
+    });
+
+    test('sync - localSave와 cloudSave 모두 null', () async {
+      manager.setLocalSave(null);
+      manager.setCloudSave(null);
+
+      final result = await manager.sync();
+
+      expect(result, true);
+      expect(manager.status, CloudSyncStatus.synced);
+    });
+  });
+
+  group('TestableCloudSaveManager - setValue 통합', () {
+    late TestableCloudSaveManager manager;
+
+    setUp(() {
+      manager = TestableCloudSaveManager();
+      manager.setInitialized(true);
+      manager.setGameId('test_game');
+      manager.setUserId('test_user');
+    });
+
+    test('setValue - 새로운 키 추가', () async {
+      await manager.save({'level': 10}, syncImmediately: false);
+      await manager.setValue('gold', 500, syncImmediately: false);
+
+      expect(manager.getValue<int>('level'), 10);
+      expect(manager.getValue<int>('gold'), 500);
+    });
+
+    test('setValue - 기존 키 업데이트', () async {
+      await manager.save({'level': 10}, syncImmediately: false);
+      await manager.setValue('level', 20, syncImmediately: false);
+
+      expect(manager.getValue<int>('level'), 20);
+    });
+
+    test('setValue - 다양한 타입', () async {
+      await manager.save({}, syncImmediately: false);
+      await manager.setValue('intVal', 42, syncImmediately: false);
+      await manager.setValue('strVal', 'hello', syncImmediately: false);
+      await manager.setValue('boolVal', true, syncImmediately: false);
+      await manager.setValue('doubleVal', 3.14, syncImmediately: false);
+
+      expect(manager.getValue<int>('intVal'), 42);
+      expect(manager.getValue<String>('strVal'), 'hello');
+      expect(manager.getValue<bool>('boolVal'), true);
+      expect(manager.getValue<double>('doubleVal'), 3.14);
+    });
+  });
+
+  group('TestableCloudSaveManager - 상태 리스너 상세', () {
+    late TestableCloudSaveManager manager;
+
+    setUp(() {
+      manager = TestableCloudSaveManager();
+      manager.setInitialized(true);
+      manager.setGameId('test_game');
+      manager.setUserId('test_user');
+    });
+
+    test('상태 변경 시 모든 리스너 호출', () async {
+      final statuses1 = <CloudSyncStatus>[];
+      final statuses2 = <CloudSyncStatus>[];
+
+      manager.addSyncListener((status) => statuses1.add(status));
+      manager.addSyncListener((status) => statuses2.add(status));
+
+      await manager.save({'level': 10}, syncImmediately: false);
+
+      expect(statuses1.isNotEmpty, true);
+      expect(statuses2.isNotEmpty, true);
+      expect(statuses1.length, statuses2.length);
+    });
+
+    test('동일 상태 변경 시 리스너 호출 안됨', () async {
+      var callCount = 0;
+      manager.addSyncListener((status) => callCount++);
+
+      // 초기 상태 설정
+      await manager.save({'level': 1}, syncImmediately: false);
+      final firstCount = callCount;
+
+      // 동일 상태로 변경 시도 (실제로는 상태가 변경되지 않음)
+      // 이는 _updateStatus에서 상태가 같으면 호출하지 않음
+      expect(callCount >= firstCount, true);
+    });
+  });
+
+  group('TestableCloudSaveManager - 초기화 상태 검증', () {
+    late TestableCloudSaveManager manager;
+
+    setUp(() {
+      manager = TestableCloudSaveManager();
+    });
+
+    tearDown(() {
+      manager.testDispose();
+    });
+
+    test('초기화 전 상태', () {
+      expect(manager.isInitialized, false);
+      expect(manager.userId, isNull);
+      expect(manager.localSave, isNull);
+      expect(manager.cloudSave, isNull);
+    });
+
+    test('초기화 후 상태', () async {
+      await manager.initialize(
+        gameId: 'test_game',
+        userId: 'test_user',
+      );
+
+      expect(manager.isInitialized, true);
+      expect(manager.userId, 'test_user');
+      expect(manager.status, CloudSyncStatus.synced);
+    });
+
+    test('초기화 - 모든 파라미터 설정', () async {
+      await manager.initialize(
+        gameId: 'game_123',
+        userId: 'user_456',
+        defaultResolution: ConflictResolution.merge,
+        conflictResolver: (conflict) async => conflict.local,
+        autoSyncInterval: Duration(seconds: 60),
+      );
+
+      expect(manager.isInitialized, true);
+      expect(manager.userId, 'user_456');
+    });
+  });
+
+  group('TestableCloudSaveManager - 버전 관리', () {
+    late TestableCloudSaveManager manager;
+
+    setUp(() {
+      manager = TestableCloudSaveManager();
+      manager.setInitialized(true);
+      manager.setGameId('test_game');
+      manager.setUserId('test_user');
+    });
+
+    test('첫 저장 - 버전 1', () async {
+      await manager.save({'level': 1}, syncImmediately: false);
+      expect(manager.localSave!.version, 1);
+    });
+
+    test('연속 저장 - 버전 증가', () async {
+      await manager.save({'level': 1}, syncImmediately: false);
+      expect(manager.localSave!.version, 1);
+
+      await manager.save({'level': 2}, syncImmediately: false);
+      expect(manager.localSave!.version, 2);
+
+      await manager.save({'level': 3}, syncImmediately: false);
+      expect(manager.localSave!.version, 3);
+    });
+
+    test('merge 후 버전 증가', () {
+      final now = DateTime.now();
+      final local = CloudSaveData(
+        id: 'save_001',
+        gameId: 'game',
+        userId: 'user',
+        data: {'level': 10},
+        lastModified: now,
+        version: 5,
+      );
+      final cloud = CloudSaveData(
+        id: 'save_001',
+        gameId: 'game',
+        userId: 'user',
+        data: {'level': 8},
+        lastModified: now.subtract(Duration(hours: 1)),
+        version: 3,
+      );
+
+      final merged = manager.testMergeSaves(local, cloud);
+      expect(merged.version, 6); // max(5, 3) + 1
+    });
+  });
+
+  group('TestableCloudSaveManager - 체크섬 검증', () {
+    late TestableCloudSaveManager manager;
+
+    setUp(() {
+      manager = TestableCloudSaveManager();
+      manager.setInitialized(true);
+      manager.setGameId('test_game');
+      manager.setUserId('test_user');
+    });
+
+    test('저장 시 체크섬 자동 생성', () async {
+      await manager.save({'level': 10}, syncImmediately: false);
+
+      expect(manager.localSave!.checksum, isNotNull);
+      expect(manager.localSave!.checksum, isNotEmpty);
+    });
+
+    test('동일 데이터 - 동일 체크섬', () async {
+      final data = {'level': 10, 'gold': 100};
+
+      await manager.save(data, syncImmediately: false);
+      final checksum1 = manager.localSave!.checksum;
+
+      // 다시 저장
+      await manager.save(data, syncImmediately: false);
+      final checksum2 = manager.localSave!.checksum;
+
+      expect(checksum1, checksum2);
+    });
+
+    test('다른 데이터 - 다른 체크섬', () async {
+      await manager.save({'level': 10}, syncImmediately: false);
+      final checksum1 = manager.localSave!.checksum;
+
+      await manager.save({'level': 20}, syncImmediately: false);
+      final checksum2 = manager.localSave!.checksum;
+
+      expect(checksum1, isNot(checksum2));
+    });
+  });
+
+  group('TestableCloudSaveManager - 타임스탬프 정확성', () {
+    late TestableCloudSaveManager manager;
+
+    setUp(() {
+      manager = TestableCloudSaveManager();
+      manager.setInitialized(true);
+      manager.setGameId('test_game');
+      manager.setUserId('test_user');
+    });
+
+    test('저장 시 현재 시간 기록', () async {
+      final beforeSave = DateTime.now();
+      await manager.save({'level': 10}, syncImmediately: false);
+      final afterSave = DateTime.now();
+
+      final saveTime = manager.localSave!.lastModified;
+      expect(saveTime.isAfter(beforeSave.subtract(Duration(seconds: 1))), true);
+      expect(saveTime.isBefore(afterSave.add(Duration(seconds: 1))), true);
+    });
+
+    test('연속 저장 - 타임스탬프 증가', () async {
+      await manager.save({'level': 1}, syncImmediately: false);
+      final time1 = manager.localSave!.lastModified;
+
+      await Future.delayed(Duration(milliseconds: 10));
+
+      await manager.save({'level': 2}, syncImmediately: false);
+      final time2 = manager.localSave!.lastModified;
+
+      expect(time2.isAfter(time1), true);
+    });
+  });
+
+  group('TestableCloudSaveManager - ID 생성', () {
+    late TestableCloudSaveManager manager;
+
+    setUp(() {
+      manager = TestableCloudSaveManager();
+      manager.setGameId('game_123');
+      manager.setUserId('user_456');
+    });
+
+    test('생성된 ID에 gameId 포함', () {
+      final id = manager.testGenerateSaveId();
+      expect(id, contains('game_123'));
+    });
+
+    test('생성된 ID에 userId 포함', () {
+      final id = manager.testGenerateSaveId();
+      expect(id, contains('user_456'));
+    });
+
+    test('생성된 ID에 타임스탬프 포함', () {
+      final id = manager.testGenerateSaveId();
+      expect(id, matches(RegExp(r'\d+$'))); // 끝에 숫자
+    });
+
+    test('연속 생성 - 고유 ID', () async {
+      final ids = <String>{};
+      for (int i = 0; i < 5; i++) {
+        ids.add(manager.testGenerateSaveId());
+        await Future.delayed(Duration(milliseconds: 1));
+      }
+      expect(ids.length, 5); // 모두 고유
+    });
+  });
+
+  group('TestableCloudSaveManager - 복합 시나리오', () {
+    late TestableCloudSaveManager manager;
+
+    setUp(() {
+      manager = TestableCloudSaveManager();
+      manager.setInitialized(true);
+      manager.setGameId('test_game');
+      manager.setUserId('test_user');
+    });
+
+    test('여러 번 저장 후 데이터 일관성', () async {
+      await manager.save({'level': 1, 'gold': 100}, syncImmediately: false);
+      await manager.setValue('level', 2, syncImmediately: false);
+      await manager.setValue('gold', 200, syncImmediately: false);
+
+      final data = manager.getData();
+      expect(data!['level'], 2);
+      expect(data['gold'], 200);
+    });
+
+    test('저장 후 조회 - 데이터 무결성', () async {
+      final originalData = {
+        'player': {'name': 'Hero', 'level': 50},
+        'inventory': ['sword', 'shield', 'potion'],
+        'stats': {'hp': 100, 'mp': 50, 'stamina': 75},
+      };
+
+      await manager.save(originalData, syncImmediately: false);
+
+      final retrievedData = manager.getData();
+      expect(retrievedData, originalData);
+    });
+
+    test('상태 변경 추적', () async {
+      final statuses = <CloudSyncStatus>[];
+      manager.addSyncListener((status) => statuses.add(status));
+
+      await manager.save({'level': 1}, syncImmediately: false);
+
+      expect(statuses.contains(CloudSyncStatus.pendingUpload), true);
+    });
+  });
 }

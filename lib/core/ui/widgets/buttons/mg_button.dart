@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../layout/mg_spacing.dart';
-import '../../accessibility/accessibility_settings.dart';
-import '../../accessibility/haptic_feedback_manager.dart';
+import 'package:mg_common_game/core/ui/layout/mg_spacing.dart';
+import 'package:mg_common_game/core/ui/accessibility/accessibility_settings.dart';
+import 'package:mg_common_game/core/ui/accessibility/haptic_feedback_manager.dart';
 
 /// MG-Games 버튼 위젯
 /// UI_UX_MASTER_GUIDE.md 기반
