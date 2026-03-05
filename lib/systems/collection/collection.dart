@@ -1,136 +1,120 @@
-import 'collection_item.dart';
-import 'collection_reward.dart';
+import 'package:mg_common_game/systems/collection/collection_item.dart';
+import 'package:mg_common_game/systems/collection/collection_reward.dart';
 
-/// A collection of items that can be completed for rewards
+export 'package:mg_common_game/systems/collection/collection_item.dart';
+export 'package:mg_common_game/systems/collection/collection_rarity.dart';
+export 'package:mg_common_game/systems/collection/collection_reward.dart';
+export 'package:mg_common_game/systems/collection/reward_type.dart';
+
+/// A collection of items that can be completed for rewards.
 class Collection {
-  /// Unique identifier for the collection
+  /// Stable collection identifier.
   final String id;
 
-  /// Display name of the collection
+  /// Collection display name.
   final String name;
 
-  /// Description of the collection
+  /// Collection description text.
   final String description;
 
-  /// List of items in this collection
+  /// Collection category used for grouping.
+  final String category;
+
+  /// List of items included in this collection.
   final List<CollectionItem> items;
 
-  /// Reward given when collection is 100% complete
-  final CollectionReward? completionReward;
-
-  /// Optional milestone rewards (e.g., at 25%, 50%, 75%)
+  /// Milestone rewards keyed by completion percentage.
   final Map<int, CollectionReward>? milestoneRewards;
 
-  /// Category for grouping collections
-  final String? category;
+  /// Reward granted when the collection is fully completed.
+  final CollectionReward? completionReward;
 
-  /// Is this collection hidden until first item is unlocked?
+  /// Whether this collection stays hidden until progress starts.
   final bool hidden;
 
-  /// Required collection IDs that must be completed before this one is visible
+  /// Collection IDs that must be completed first.
   final List<String>? prerequisites;
 
-  const Collection({
+  Collection({
     required this.id,
     required this.name,
     required this.description,
+    this.category = 'general',
     required this.items,
-    this.completionReward,
     this.milestoneRewards,
-    this.category,
-    this.hidden = false,
+    this.completionReward,
     this.prerequisites,
-  });
+    this.hidden = false,
+  })  : assert(id != '', 'id must not be empty'),
+        assert(name != '', 'name must not be empty'),
+        assert(description != '', 'description must not be empty'),
+        assert(category != '', 'category must not be empty'),
+        assert(items.isNotEmpty, 'items must not be empty'),
+        assert(
+          milestoneRewards == null ||
+              milestoneRewards.keys.every(
+                (milestone) => milestone >= 0 && milestone <= 100,
+              ),
+          'milestone percentages must be in range 0..100',
+        );
 
-  /// Get total number of items in collection
+  /// Total number of items in this collection.
   int get totalItems => items.length;
 
-  /// Get item by ID
-  CollectionItem? getItem(String itemId) {
-    try {
-      return items.firstWhere((item) => item.id == itemId);
-    } catch (_) {
-      return null;
-    }
-  }
-
-  /// Check if collection contains item
+  /// Returns true when this collection contains the given item ID.
   bool containsItem(String itemId) {
     return items.any((item) => item.id == itemId);
   }
 
-  /// Get items by rarity
-  List<CollectionItem> getItemsByRarity(String rarity) {
-    return items.where((item) => item.rarity == rarity).toList();
-  }
-
-  /// Get items by category
-  List<CollectionItem> getItemsByCategory(String category) {
-    return items.where((item) => item.category == category).toList();
-  }
-
-  /// Calculate percentage for milestone reward
-  int? getMilestonePercentage(int unlockedCount) {
-    if (milestoneRewards == null || milestoneRewards!.isEmpty) {
-      return null;
-    }
-
-    final percentage = (unlockedCount / totalItems * 100).floor();
-
-    // Find the highest milestone that has been reached
-    final sortedMilestones = milestoneRewards!.keys.toList()..sort();
-
-    for (int i = sortedMilestones.length - 1; i >= 0; i--) {
-      if (percentage >= sortedMilestones[i]) {
-        return sortedMilestones[i];
-      }
-    }
-
-    return null;
-  }
-
-  /// Create from JSON
+  /// Creates a [Collection] from JSON data.
   factory Collection.fromJson(Map<String, dynamic> json) {
+    final rawItems = json['items'] as List<dynamic>? ?? const [];
+    final rawMilestones = json['milestoneRewards'] as Map<String, dynamic>?;
+
     return Collection(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      description: json['description'] as String,
-      items: (json['items'] as List<dynamic>)
-          .map((e) => CollectionItem.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      completionReward: json['completionReward'] != null
+      id: json['id'] as String? ?? '',
+      name: json['name'] as String? ?? '',
+      description: json['description'] as String? ?? '',
+      category: json['category'] as String? ?? 'general',
+      items: rawItems
+          .whereType<Map>()
+          .map((item) => item.cast<String, dynamic>())
+          .map(CollectionItem.fromJson)
+          .toList(growable: false),
+      milestoneRewards: rawMilestones?.map(
+        (key, value) => MapEntry(
+          int.parse(key),
+          CollectionReward.fromJson((value as Map).cast<String, dynamic>()),
+        ),
+      ),
+      completionReward: json['completionReward'] is Map
           ? CollectionReward.fromJson(
-              json['completionReward'] as Map<String, dynamic>)
+              (json['completionReward'] as Map).cast<String, dynamic>(),
+            )
           : null,
-      milestoneRewards: (json['milestoneRewards'] as Map<String, dynamic>?)
-          ?.map((key, value) => MapEntry(
-                int.parse(key),
-                CollectionReward.fromJson(value as Map<String, dynamic>),
-              )),
-      category: json['category'] as String?,
-      hidden: json['hidden'] as bool? ?? false,
       prerequisites: (json['prerequisites'] as List<dynamic>?)
-          ?.map((e) => e as String)
-          .toList(),
+          ?.whereType<String>()
+          .toList(growable: false),
+      hidden: json['hidden'] as bool? ?? false,
     );
   }
 
-  /// Convert to JSON
+  /// Serializes this collection to JSON.
   Map<String, dynamic> toJson() {
     return {
       'id': id,
       'name': name,
       'description': description,
-      'items': items.map((item) => item.toJson()).toList(),
-      if (completionReward != null)
-        'completionReward': completionReward!.toJson(),
+      'category': category,
+      'items': items.map((item) => item.toJson()).toList(growable: false),
       if (milestoneRewards != null)
         'milestoneRewards': milestoneRewards!.map(
           (key, value) => MapEntry(key.toString(), value.toJson()),
         ),
-      if (category != null) 'category': category,
-      'hidden': hidden,
+      if (completionReward != null)
+        'completionReward': completionReward!.toJson(),
       if (prerequisites != null) 'prerequisites': prerequisites,
+      'hidden': hidden,
     };
   }
 
@@ -146,5 +130,5 @@ class Collection {
 
   @override
   String toString() =>
-      'Collection(id: $id, name: $name, items: ${items.length})';
+      'Collection(id: $id, category: $category, items: ${items.length})';
 }

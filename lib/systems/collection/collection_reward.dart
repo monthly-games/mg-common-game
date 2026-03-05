@@ -1,85 +1,76 @@
-/// Reward given for completing a collection
+import 'package:mg_common_game/systems/collection/reward_type.dart';
+
+/// Reward payload for collection milestone and completion rewards.
 class CollectionReward {
-  /// Gold reward amount
-  final int gold;
+  /// Reward category.
+  final RewardType type;
 
-  /// Gems (premium currency) reward amount
-  final int gems;
+  /// Reward amount.
+  final int amount;
 
-  /// Item rewards (item IDs)
-  final List<String> items;
-
-  /// Experience points reward
-  final int experience;
-
-  /// Custom rewards (key-value pairs for game-specific rewards)
-  final Map<String, dynamic>? customRewards;
+  /// Item identifier when [type] is [RewardType.item] or [RewardType.unlock].
+  final String? itemId;
 
   const CollectionReward({
-    this.gold = 0,
-    this.gems = 0,
-    this.items = const [],
-    this.experience = 0,
-    this.customRewards,
-  });
+    required this.type,
+    required this.amount,
+    this.itemId,
+  })  : assert(amount >= 0, 'amount must be non-negative'),
+        assert(
+          type != RewardType.item && type != RewardType.unlock ||
+              (itemId != null && itemId != ''),
+          'itemId is required for item and unlock rewards',
+        );
 
-  /// Check if reward is empty (no rewards)
-  bool get isEmpty =>
-      gold == 0 &&
-      gems == 0 &&
-      items.isEmpty &&
-      experience == 0 &&
-      (customRewards == null || customRewards!.isEmpty);
-
-  /// Create from JSON
-  factory CollectionReward.fromJson(Map<String, dynamic> json) {
-    return CollectionReward(
-      gold: json['gold'] as int? ?? 0,
-      gems: json['gems'] as int? ?? 0,
-      items: (json['items'] as List<dynamic>?)
-              ?.map((e) => e as String)
-              .toList() ??
-          [],
-      experience: json['experience'] as int? ?? 0,
-      customRewards: json['customRewards'] as Map<String, dynamic>?,
-    );
-  }
-
-  /// Convert to JSON
-  Map<String, dynamic> toJson() {
-    return {
-      'gold': gold,
-      'gems': gems,
-      'items': items,
-      'experience': experience,
-      if (customRewards != null) 'customRewards': customRewards,
+  /// Human readable reward description.
+  String get displayText {
+    return switch (type) {
+      RewardType.gold => '$amount Gold',
+      RewardType.gems => '$amount Gems',
+      RewardType.xp => '$amount XP',
+      RewardType.item => '${itemId ?? 'Item'} x$amount',
+      RewardType.currency => '$amount Currency',
+      RewardType.unlock => 'Unlock ${itemId ?? 'content'}',
     };
   }
 
-  /// Create a copy with updated values
-  CollectionReward copyWith({
-    int? gold,
-    int? gems,
-    List<String>? items,
-    int? experience,
-    Map<String, dynamic>? customRewards,
-  }) {
+  /// Creates a [CollectionReward] from serialized data.
+  factory CollectionReward.fromJson(Map<String, dynamic> json) {
+    final rawAmount = json['amount'];
+
     return CollectionReward(
-      gold: gold ?? this.gold,
-      gems: gems ?? this.gems,
-      items: items ?? this.items,
-      experience: experience ?? this.experience,
-      customRewards: customRewards ?? this.customRewards,
+      type: RewardType.fromName(json['type'] as String?),
+      amount: rawAmount is num ? rawAmount.toInt() : 0,
+      itemId: json['itemId'] as String?,
     );
   }
 
+  /// Serializes this reward to JSON.
+  Map<String, dynamic> toJson() {
+    return {
+      'type': type.name,
+      'amount': amount,
+      if (itemId != null) 'itemId': itemId,
+    };
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+
+    return other is CollectionReward &&
+        type == other.type &&
+        amount == other.amount &&
+        itemId == other.itemId;
+  }
+
+  @override
+  int get hashCode => Object.hash(type, amount, itemId);
+
   @override
   String toString() {
-    final parts = <String>[];
-    if (gold > 0) parts.add('Gold: $gold');
-    if (gems > 0) parts.add('Gems: $gems');
-    if (items.isNotEmpty) parts.add('Items: ${items.length}');
-    if (experience > 0) parts.add('XP: $experience');
-    return 'CollectionReward(${parts.join(', ')})';
+    return 'CollectionReward(type: ${type.name}, amount: $amount, itemId: $itemId)';
   }
 }

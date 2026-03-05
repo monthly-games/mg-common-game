@@ -1,24 +1,26 @@
-/// Collection item model representing a single collectible item
+import 'package:mg_common_game/systems/collection/collection_rarity.dart';
+
+/// Individual item definition used in a [Collection].
 class CollectionItem {
-  /// Unique identifier for the item
+  /// Stable item identifier.
   final String id;
 
-  /// Display name of the item
+  /// Item display name.
   final String name;
 
-  /// Description of the item
+  /// Item description text.
   final String description;
 
-  /// Rarity tier (common, rare, epic, legendary, mythic)
-  final String rarity;
+  /// Rarity tier.
+  final CollectionRarity rarity;
 
-  /// Optional icon asset path
+  /// Optional icon asset path.
   final String? iconPath;
 
-  /// Optional category for grouping items
-  final String? category;
+  /// Optional hint shown before the item is unlocked.
+  final String? unlockHint;
 
-  /// Additional metadata
+  /// Optional custom metadata for game-specific usage.
   final Map<String, dynamic>? metadata;
 
   const CollectionItem({
@@ -27,91 +29,56 @@ class CollectionItem {
     required this.description,
     required this.rarity,
     this.iconPath,
-    this.category,
+    this.unlockHint,
     this.metadata,
-  });
+  })  : assert(id != '', 'id must not be empty'),
+        assert(name != '', 'name must not be empty'),
+        assert(description != '', 'description must not be empty');
 
-  /// Create from JSON
+  /// Creates a [CollectionItem] from JSON data.
   factory CollectionItem.fromJson(Map<String, dynamic> json) {
+    final rawMetadata = json['metadata'];
+
     return CollectionItem(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      description: json['description'] as String,
-      rarity: json['rarity'] as String,
+      id: json['id'] as String? ?? '',
+      name: json['name'] as String? ?? '',
+      description: json['description'] as String? ?? '',
+      rarity: CollectionRarity.fromName(json['rarity'] as String?),
       iconPath: json['iconPath'] as String?,
-      category: json['category'] as String?,
-      metadata: json['metadata'] as Map<String, dynamic>?,
+      unlockHint: json['unlockHint'] as String?,
+      metadata: rawMetadata is Map
+          ? rawMetadata.cast<String, dynamic>()
+          : null,
     );
   }
 
-  /// Convert to JSON
+  /// Serializes this item to JSON.
   Map<String, dynamic> toJson() {
     return {
       'id': id,
       'name': name,
       'description': description,
-      'rarity': rarity,
+      'rarity': rarity.name,
       if (iconPath != null) 'iconPath': iconPath,
-      if (category != null) 'category': category,
+      if (unlockHint != null) 'unlockHint': unlockHint,
       if (metadata != null) 'metadata': metadata,
     };
   }
 
   @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is CollectionItem &&
-          runtimeType == other.runtimeType &&
-          id == other.id;
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+
+    return other is CollectionItem && id == other.id;
+  }
 
   @override
   int get hashCode => id.hashCode;
 
   @override
-  String toString() => 'CollectionItem(id: $id, name: $name, rarity: $rarity)';
-}
-
-/// Predefined rarity tiers
-class CollectionRarity {
-  static const String common = 'common';
-  static const String rare = 'rare';
-  static const String epic = 'epic';
-  static const String legendary = 'legendary';
-  static const String mythic = 'mythic';
-
-  /// Get rarity display color
-  static int getColor(String rarity) {
-    switch (rarity) {
-      case common:
-        return 0xFF9E9E9E; // Gray
-      case rare:
-        return 0xFF2196F3; // Blue
-      case epic:
-        return 0xFF9C27B0; // Purple
-      case legendary:
-        return 0xFFFFC107; // Gold
-      case mythic:
-        return 0xFFFF5722; // Red-Orange
-      default:
-        return 0xFF9E9E9E;
-    }
-  }
-
-  /// Get rarity sort order (lower = more common)
-  static int getSortOrder(String rarity) {
-    switch (rarity) {
-      case common:
-        return 0;
-      case rare:
-        return 1;
-      case epic:
-        return 2;
-      case legendary:
-        return 3;
-      case mythic:
-        return 4;
-      default:
-        return -1;
-    }
+  String toString() {
+    return 'CollectionItem(id: $id, name: $name, rarity: ${rarity.name})';
   }
 }
