@@ -20,6 +20,10 @@ export 'gacha/gacha_manager.dart';
 // Battle Pass System
 export 'battlepass/battlepass_config.dart';
 export 'battlepass/battlepass_manager.dart';
+
+// Collection System
+export 'collection/index.dart';
+
 // Leaderboard System
 export 'leaderboard/leaderboard.dart';
 
