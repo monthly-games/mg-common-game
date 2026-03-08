@@ -396,6 +396,48 @@ Selector<GameProvider, int>(
 )
 ```
 
+### 상태 관리 패턴 선택 가이드
+
+| 패턴 | 사용 시점 | 예시 |
+|------|----------|------|
+| **ChangeNotifier + Selector** | UI 상태, 게임 데이터 (**기본 권장**) | 코인, 레벨, 인벤토리 |
+| **Callback** | 단순 이벤트, 부모→자식 통신 | 버튼 핸들러, 다이얼로그 결과 |
+| **Stream** | 실시간 데이터, 서버 이벤트 | 채팅, 리더보드, 실시간 매칭 |
+
+#### 신규 코드 기본 원칙
+
+- **기본 선택:** `ChangeNotifier` + `Provider` + `Selector`
+- 한 Provider는 하나의 도메인만 담당 (Single Responsibility)
+- 같은 Feature 모듈 안에서 패턴을 혼용하지 않는다
+- 외부 데이터 소스(Firebase, WebSocket)만 Stream 허용
+
+#### Anti-pattern: 혼합 패턴
+
+```dart
+// BAD: 같은 모듈에서 Stream과 ChangeNotifier 혼용
+class GameService {
+  final _scoreController = StreamController<int>(); // Stream
+  final coinsNotifier = ValueNotifier<int>(0);       // ValueNotifier
+  // → 소비하는 쪽에서 두 가지 패턴을 모두 처리해야 함
+}
+
+// GOOD: 하나의 패턴으로 통일
+class GameService extends ChangeNotifier {
+  int _score = 0;
+  int _coins = 0;
+  int get score => _score;
+  int get coins => _coins;
+
+  void updateScore(int value) {
+    if (_score != value) {
+      _score = value;
+      notifyListeners();
+    }
+  }
+  // → Selector로 각각 구독 가능
+}
+```
+
 ---
 
 ## 6. 테스트 규칙
