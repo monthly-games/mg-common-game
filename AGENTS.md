@@ -114,7 +114,7 @@ Total: 429 Dart files across 117+ directories
 
 Same as canonical lib:
 - **Imports**: Package imports ONLY (`import 'package:mg_common_game/...'`)
-- **77 relative import violations** exist here (needs fixing)
+- **0 relative import violations** (77 fixed in Q2 2026 — SOURCE repo now clean)
 - **UI**: Always MGColors/MGTextStyles/MGSpacing
 - **Tests**: Given-When-Then, mock externals
 - **Performance**: `ListView.builder` for lists, no new objects in `build()`
@@ -127,7 +127,7 @@ Same as canonical lib:
 - **NEVER** break public API of canonical lib
 - **DO NOT** create new top-level directories without design review (already 117!)
 - **DO NOT** duplicate existing modules (check for 30+ existing duplicates)
-- **AVOID** relative imports (77 violations exist)
+- **AVOID** relative imports (0 violations now — all fixed Q2 2026)
 
 ## CLEANUP ROADMAP
 
@@ -150,8 +150,8 @@ Same as canonical lib:
 - Identify unused directories
 - Archive or delete
 
-**Priority 5: Fix relative imports**
-- Convert 77 violations to package imports
+**Priority 5: Fix relative imports** ✅ DONE (Q2 2026)
+- All 77 violations converted to package imports
 
 ## MIGRATION NOTES
 
@@ -170,6 +170,6 @@ Same as canonical lib:
 
 ---
 
-**Document version**: 1.0  
-**Last updated**: 2026-02-26  
-**Status**: Active development (experimental), sync to canonical for production
+**Document version**: 1.1  
+**Last updated**: 2026-03-13  
+**Status**: Active development (experimental), sync to canonical for production. Relative imports: 0 violations.
