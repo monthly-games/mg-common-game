@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../core/systems/save_manager.dart';
+import 'package:mg_common_game/core/systems/save_manager.dart';
 
 class Upgrade {
   final String id;

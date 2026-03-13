@@ -1,0 +1,23 @@
+# dartdoc configuration for mg_common_game
+
+dartdoc:
+  categoryOrder:
+    - "Core"
+    - "Features"
+    - "Systems"
+    - "UI"
+  
+  exclude:
+    - "example/**"
+    - "test/**"
+    - "**/**.g.dart"
+  
+  showUndocumentedCategories: true
+  
+  nodoc:
+    - "*.internal"
+    - "*.private"
+
+  linkToSource:
+    root: "."
+    uriTemplate: "https://github.com/monthly-games/mg-games/blob/main/repos/mg-common-game/%f%#L%l%"

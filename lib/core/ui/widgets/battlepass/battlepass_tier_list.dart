@@ -2,9 +2,9 @@
 library;
 
 import 'package:flutter/material.dart';
-import '../../../../systems/battlepass/battlepass_config.dart';
-import '../../theme/mg_colors.dart';
-import '../../layout/mg_spacing.dart';
+import 'package:mg_common_game/systems/battlepass/battlepass_config.dart';
+import 'package:mg_common_game/core/ui/theme/mg_colors.dart';
+import 'package:mg_common_game/core/ui/layout/mg_spacing.dart';
 
 /// 배틀패스 티어 목록 위젯
 class BattlePassTierList extends StatelessWidget {

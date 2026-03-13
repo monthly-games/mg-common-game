@@ -13,7 +13,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
-import '../models/ad_unit.dart';
+import 'package:mg_common_game/core/ads/models/ad_unit.dart';
 
 /// AdMob initialization result
 class AdMobInitResult {

@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../accessibility/accessibility_settings.dart';
+import 'package:mg_common_game/core/accessibility/accessibility_settings.dart';
 import 'polish_sounds.dart';
 
 /// 보상 아이템 정보

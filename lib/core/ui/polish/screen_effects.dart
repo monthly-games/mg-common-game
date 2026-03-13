@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import '../accessibility/accessibility_settings.dart';
+import 'package:mg_common_game/core/accessibility/accessibility_settings.dart';
 
 /// 화면 효과 컨트롤러
 ///

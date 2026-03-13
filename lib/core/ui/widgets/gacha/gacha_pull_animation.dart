@@ -2,9 +2,9 @@
 library;
 
 import 'package:flutter/material.dart';
-import '../../../../systems/gacha/gacha_pool.dart';
-import '../../theme/mg_colors.dart';
-import '../../layout/mg_spacing.dart';
+import 'package:mg_common_game/systems/gacha/gacha_pool.dart';
+import 'package:mg_common_game/core/ui/theme/mg_colors.dart';
+import 'package:mg_common_game/core/ui/layout/mg_spacing.dart';
 
 /// 가챠 뽑기 연출 위젯
 class GachaPullAnimation extends StatefulWidget {

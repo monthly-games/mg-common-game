@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import '../../core/systems/save_manager.dart';
+import 'package:mg_common_game/core/systems/save_manager.dart';
 import 'collection.dart';
 import 'collection_item.dart';
 import 'collection_reward.dart';

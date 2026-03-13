@@ -1,6 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import '../accessibility/accessibility_settings.dart';
+import 'package:mg_common_game/core/ui/accessibility/accessibility_settings.dart';
 
 /// MG-Games 애니메이션 위젯
 /// UI_UX_MASTER_GUIDE.md 기반

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../ui/theme/app_colors.dart';
-import '../../models/score_entry.dart';
+import 'package:mg_common_game/core/ui/theme/app_colors.dart';
+import 'package:mg_common_game/core/models/score_entry.dart';
 
 class LeaderboardScreen extends StatelessWidget {
   final String title;

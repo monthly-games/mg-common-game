@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'mg_colors.dart';
 import 'dark_mode_colors.dart';
-import '../accessibility/colorblind_colors.dart';
-import '../accessibility/high_contrast_colors.dart';
+import 'package:mg_common_game/core/accessibility/colorblind_colors.dart';
+import 'package:mg_common_game/core/accessibility/high_contrast_colors.dart';
 
 /// MG-Games 통합 테마 시스템
 /// 색맹/고대비/다크모드 통합

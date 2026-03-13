@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../systems/rpg/inventory_system.dart';
+import 'package:mg_common_game/core/systems/rpg/inventory_system.dart';
 
 class InventoryGrid extends StatelessWidget {
   final InventorySystem inventory;

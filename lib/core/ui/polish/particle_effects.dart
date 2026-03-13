@@ -1,6 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import '../accessibility/accessibility_settings.dart';
+import 'package:mg_common_game/core/accessibility/accessibility_settings.dart';
 
 /// 파티클 설정
 class ParticleConfig {

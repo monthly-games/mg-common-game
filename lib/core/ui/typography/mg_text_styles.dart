@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../accessibility/accessibility_settings.dart' show TextScaleOption;
+import 'package:mg_common_game/core/accessibility/accessibility_settings.dart' show TextScaleOption;
 
 /// MG-Games 타이포그래피 시스템
 /// UI_UX_MASTER_GUIDE.md 기반

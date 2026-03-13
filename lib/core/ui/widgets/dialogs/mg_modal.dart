@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../layout/mg_spacing.dart';
-import '../buttons/mg_button.dart';
+import 'package:mg_common_game/core/ui/layout/mg_spacing.dart';
+import 'package:mg_common_game/core/ui/widgets/buttons/mg_button.dart';
 
 /// MG-Games 모달 다이얼로그
 /// UI_UX_MASTER_GUIDE.md 기반

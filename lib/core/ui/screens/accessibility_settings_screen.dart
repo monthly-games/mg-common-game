@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../accessibility/accessibility_settings.dart';
-import '../accessibility/colorblind_colors.dart';
-import '../layout/mg_spacing.dart';
+import 'package:mg_common_game/core/accessibility/accessibility_settings.dart';
+import 'package:mg_common_game/core/accessibility/colorblind_colors.dart';
+import 'package:mg_common_game/core/ui/layout/mg_spacing.dart';
 
 /// MG-Games 접근성 설정 화면
 /// ACCESSIBILITY_GUIDE.md 기반

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../layout/mg_spacing.dart';
+import 'package:mg_common_game/core/ui/layout/mg_spacing.dart';
 
 /// MG-Games 로딩 위젯
 /// UI_UX_MASTER_GUIDE.md 기반

@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'prestige_manager.dart';
-import '../../core/systems/save_manager.dart';
+import 'package:mg_common_game/core/systems/save_manager.dart';
 
 class ProgressionManager extends ChangeNotifier implements Saveable {
   @override

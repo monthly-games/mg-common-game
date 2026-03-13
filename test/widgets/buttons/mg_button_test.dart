@@ -236,6 +236,190 @@ void main() {
 
       expect(find.text('큰 터치 영역'), findsOneWidget);
     });
+
+    // ============================================================
+    // Enhanced tests: edge cases & deeper verification
+    // ============================================================
+
+    testWidgets('does not call onPressed when loading', (WidgetTester tester) async {
+      bool pressed = false;
+
+      await tester.pumpWidget(
+        createTestWidget(
+          MGButton(
+            label: '로딩 중',
+            loading: true,
+            onPressed: () {
+              pressed = true;
+            },
+          ),
+        ),
+      );
+
+      await tester.tap(find.byType(MGButton));
+      await tester.pump();
+
+      expect(pressed, isFalse);
+    });
+
+    testWidgets('hides icon when loading is true', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        createTestWidget(
+          MGButton(
+            label: '로딩 아이콘',
+            icon: Icons.send,
+            loading: true,
+            onPressed: () {},
+          ),
+        ),
+      );
+
+      // Loading indicator shown instead of icon
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.byIcon(Icons.send), findsNothing);
+    });
+
+    testWidgets('renders without onPressed (null callback)', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        createTestWidget(
+          const MGButton(
+            label: '콜백 없음',
+          ),
+        ),
+      );
+
+      expect(find.text('콜백 없음'), findsOneWidget);
+      // Should not throw when tapped
+      await tester.tap(find.byType(MGButton));
+      await tester.pump();
+    });
+
+    testWidgets('semantics uses label as fallback when semanticLabel is null',
+        (WidgetTester tester) async {
+      await tester.pumpWidget(
+        createTestWidget(
+          MGButton(
+            label: '기본 레이블',
+            onPressed: () {},
+          ),
+        ),
+      );
+
+      // Semantics wrapper uses label as fallback
+      final semanticsWidget = tester.widget<Semantics>(
+        find.descendant(
+          of: find.byType(MGButton),
+          matching: find.byType(Semantics),
+        ).first,
+      );
+      expect(semanticsWidget.properties.label, equals('기본 레이블'));
+    });
+
+    testWidgets('semantics wraps disabled button correctly', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        createTestWidget(
+          MGButton(
+            label: '비활성 버튼',
+            enabled: false,
+            onPressed: () {},
+          ),
+        ),
+      );
+
+      // Semantics wrapper marks as not enabled
+      final semanticsWidget = tester.widget<Semantics>(
+        find.descendant(
+          of: find.byType(MGButton),
+          matching: find.byType(Semantics),
+        ).first,
+      );
+      expect(semanticsWidget.properties.enabled, isFalse);
+
+      // The underlying ElevatedButton is disabled (onPressed is null)
+      final button = tester.widget<ElevatedButton>(find.byType(ElevatedButton));
+      expect(button.onPressed, isNull);
+    });
+
+    testWidgets('outlined button applies custom border color', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        createTestWidget(
+          MGButton(
+            label: '테두리',
+            style: MGButtonStyle.outlined,
+            backgroundColor: Colors.orange,
+            onPressed: () {},
+          ),
+        ),
+      );
+
+      expect(find.byType(OutlinedButton), findsOneWidget);
+      expect(find.text('테두리'), findsOneWidget);
+    });
+
+    testWidgets('text style button applies foreground color', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        createTestWidget(
+          MGButton(
+            label: '텍스트 스타일',
+            style: MGButtonStyle.text,
+            foregroundColor: Colors.teal,
+            onPressed: () {},
+          ),
+        ),
+      );
+
+      expect(find.byType(TextButton), findsOneWidget);
+    });
+
+    testWidgets('all three sizes render without overflow', (WidgetTester tester) async {
+      for (final size in MGButtonSize.values) {
+        await tester.pumpWidget(
+          createTestWidget(
+            MGButton(
+              label: '사이즈 $size',
+              size: size,
+              onPressed: () {},
+            ),
+          ),
+        );
+
+        expect(find.text('사이즈 $size'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      }
+    });
+
+    testWidgets('icon and loading are mutually exclusive in display',
+        (WidgetTester tester) async {
+      // Not loading: icon visible
+      await tester.pumpWidget(
+        createTestWidget(
+          MGButton(
+            label: '테스트',
+            icon: Icons.play_arrow,
+            loading: false,
+            onPressed: () {},
+          ),
+        ),
+      );
+
+      expect(find.byIcon(Icons.play_arrow), findsOneWidget);
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+
+      // Loading: spinner visible, icon gone
+      await tester.pumpWidget(
+        createTestWidget(
+          MGButton(
+            label: '테스트',
+            icon: Icons.play_arrow,
+            loading: true,
+            onPressed: () {},
+          ),
+        ),
+      );
+
+      expect(find.byIcon(Icons.play_arrow), findsNothing);
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    });
   });
 
   group('MGIconButton', () {

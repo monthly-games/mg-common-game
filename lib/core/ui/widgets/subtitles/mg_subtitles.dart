@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../accessibility/accessibility_settings.dart';
+import 'package:mg_common_game/core/accessibility/accessibility_settings.dart';
 
 /// MG-Games 자막 위젯
 /// ACCESSIBILITY_GUIDE.md 기반

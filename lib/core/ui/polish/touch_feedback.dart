@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../audio/audio_manager.dart';
-import '../accessibility/accessibility_settings.dart';
+import 'package:mg_common_game/core/audio/audio_manager.dart';
+import 'package:mg_common_game/core/accessibility/accessibility_settings.dart';
 import 'polish_sounds.dart';
 
 /// 햅틱 피드백 타입

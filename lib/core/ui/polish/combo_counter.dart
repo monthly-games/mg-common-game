@@ -1,6 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import '../accessibility/accessibility_settings.dart';
+import 'package:mg_common_game/core/accessibility/accessibility_settings.dart';
 import 'polish_sounds.dart';
 
 /// 콤보 카운터 위젯

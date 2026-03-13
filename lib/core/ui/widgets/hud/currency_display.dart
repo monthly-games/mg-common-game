@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../theme/app_colors.dart';
+import 'package:mg_common_game/core/ui/theme/app_colors.dart';
 
 /// Currency/Resource display widget for HUD
 class CurrencyDisplay extends StatelessWidget {

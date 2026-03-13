@@ -1,13 +1,13 @@
 import 'package:get_it/get_it.dart';
 import 'save_manager.dart';
-import '../../systems/progression/progression_manager.dart';
-import '../../systems/progression/prestige_manager.dart';
-import '../../systems/progression/achievement_manager.dart';
-import '../../systems/progression/upgrade_manager.dart';
-import '../../systems/quests/daily_quest.dart';
-import '../../systems/stats/statistics_manager.dart';
-import '../../systems/settings/settings_manager.dart';
-import '../../core/economy/gold_manager.dart';
+import 'package:mg_common_game/systems/progression/progression_manager.dart';
+import 'package:mg_common_game/systems/progression/prestige_manager.dart';
+import 'package:mg_common_game/systems/progression/achievement_manager.dart';
+import 'package:mg_common_game/systems/progression/upgrade_manager.dart';
+import 'package:mg_common_game/systems/quests/daily_quest.dart';
+import 'package:mg_common_game/systems/stats/statistics_manager.dart';
+import 'package:mg_common_game/systems/settings/settings_manager.dart';
+import 'package:mg_common_game/core/economy/gold_manager.dart';
 
 /// Helper class for setting up SaveManager with common game systems
 class SaveManagerHelper {
