@@ -11,7 +11,7 @@ enum GachaRarity {
   normal,        // N - 일반
   rare,          // R - 레어
   superRare,     // SR - 슈퍼레어
-  superSuperRare,// SSR - 울트라레어 (레거시 별칭, ultraRare와 동일)
+  superRare,// SSR - 울트라레어 (레거시 별칭, ultraRare와 동일)
   ultraRare,     // SSR - 울트라레어
   legendary,     // UR - 레전더리
 }
@@ -26,7 +26,7 @@ extension GachaRarityExtension on GachaRarity {
         return 35.0;
       case GachaRarity.superRare:
         return 12.0;
-      case GachaRarity.superSuperRare:
+      case GachaRarity.superRare:
       case GachaRarity.ultraRare:
         return 2.7;
       case GachaRarity.legendary:
@@ -42,7 +42,7 @@ extension GachaRarityExtension on GachaRarity {
         return 'R';
       case GachaRarity.superRare:
         return 'SR';
-      case GachaRarity.superSuperRare:
+      case GachaRarity.superRare:
       case GachaRarity.ultraRare:
         return 'SSR';
       case GachaRarity.legendary:
@@ -58,7 +58,7 @@ extension GachaRarityExtension on GachaRarity {
         return '#1EFF00';
       case GachaRarity.superRare:
         return '#0070DD';
-      case GachaRarity.superSuperRare:
+      case GachaRarity.superRare:
       case GachaRarity.ultraRare:
         return '#A335EE';
       case GachaRarity.legendary:

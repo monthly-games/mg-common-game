@@ -34,6 +34,14 @@ export 'systems/battle/battle.dart';
 
 // Social System (Friends, Guilds, Raids, Leaderboards)
 export 'systems/social/social.dart';
+export 'systems/leaderboard/leaderboard.dart';
+
+// Social UI Screens
+export 'core/ui/screens/friends_screen.dart';
+export 'core/ui/screens/social_leaderboard_screen.dart';
+
+// Social Initializer
+export 'core/social/social_initializer.dart';
 
 // Event System (Limited-time events, Campaigns)
 export 'systems/events/events.dart';

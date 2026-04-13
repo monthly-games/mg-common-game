@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:mg_common_game/core/systems/save_manager.dart';
-import 'collection.dart';
-import 'collection_item.dart';
-import 'collection_reward.dart';
+import 'package:mg_common_game/systems/collection/collection.dart';
+import 'package:mg_common_game/systems/collection/collection_item.dart';
+import 'package:mg_common_game/systems/collection/collection_reward.dart';
 
 /// Manager for collection system
 /// 

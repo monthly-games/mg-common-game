@@ -8,7 +8,7 @@ void main() {
       expect(GachaRarity.normal, isNotNull);
       expect(GachaRarity.rare, isNotNull);
       expect(GachaRarity.superRare, isNotNull);
-      expect(GachaRarity.superSuperRare, isNotNull);
+      expect(GachaRarity.superRare, isNotNull);
       expect(GachaRarity.ultraRare, isNotNull);
       expect(GachaRarity.legendary, isNotNull);
     });
@@ -17,7 +17,7 @@ void main() {
       expect(GachaRarity.normal.index, 0);
       expect(GachaRarity.rare.index, 1);
       expect(GachaRarity.superRare.index, 2);
-      expect(GachaRarity.superSuperRare.index, 3);
+      expect(GachaRarity.superRare.index, 3);
       expect(GachaRarity.ultraRare.index, 4);
       expect(GachaRarity.legendary.index, 5);
     });
@@ -37,8 +37,8 @@ void main() {
         expect(GachaRarity.superRare.baseRate, 12.0);
       });
 
-      test('superSuperRare = 2.7%', () {
-        expect(GachaRarity.superSuperRare.baseRate, 2.7);
+      test('superRare = 2.7%', () {
+        expect(GachaRarity.superRare.baseRate, 2.7);
       });
 
       test('ultraRare = 2.7%', () {
@@ -74,8 +74,8 @@ void main() {
         expect(GachaRarity.superRare.nameKr, 'SR');
       });
 
-      test('superSuperRare = SSR', () {
-        expect(GachaRarity.superSuperRare.nameKr, 'SSR');
+      test('superRare = SSR', () {
+        expect(GachaRarity.superRare.nameKr, 'SSR');
       });
 
       test('ultraRare = SSR', () {
@@ -100,8 +100,8 @@ void main() {
         expect(GachaRarity.superRare.colorHex, '#0070DD');
       });
 
-      test('superSuperRare = #A335EE (보라색)', () {
-        expect(GachaRarity.superSuperRare.colorHex, '#A335EE');
+      test('superRare = #A335EE (보라색)', () {
+        expect(GachaRarity.superRare.colorHex, '#A335EE');
       });
 
       test('ultraRare = #A335EE (보라색)', () {
